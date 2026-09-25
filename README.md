@@ -25,3 +25,7 @@ npm run build
 ## Deployment note
 
 Deploy `dist/` as static assets. Only packages already approved for the public Skill library may be placed in `dist/downloads/`; never add private Skill masters or review candidates to this repository or the served download directory. Run `npm run build` before every deployment.
+
+## Lead capture setup
+
+The local server uses a mock Kit response so the email form and immediate download can be previewed without sending data. The production endpoint is `functions/api/subscribe.js`; configure `KIT_API_KEY` as a server-side secret and `KIT_FORM_ID` as a server-side variable. Keep `KIT_MOCK_MODE` unset or set it to `false` in production. The endpoint records the required consent in a Kit custom field and enrolls the subscriber in the selected Form. Configure that Form to trigger the short delivery email sequence in Kit.
