@@ -1,0 +1,9 @@
+[
+  {
+    "artifact": "/downloads/chief-agent-daily-leverage-v0.1-public.zip",
+    "approvedFile": "chief-agent-daily-leverage-v0.1-public.zip",
+    "cleanTestPassed": true,
+    "testType": "isolated capability-profile simulation",
+    "sha256": "77c6708ecf63a3d175620fc883b4ebf4728373564dfc5ed28321ca48d8bdb47d"
+  }
+]

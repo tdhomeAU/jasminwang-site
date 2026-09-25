@@ -1,0 +1,14 @@
+{
+  "name": "jasminwang-site",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Static source for 澳洲茉莉 AI 技能库",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "build": "node scripts/verify-public-boundary.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
