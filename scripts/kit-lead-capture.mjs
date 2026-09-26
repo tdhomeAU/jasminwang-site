@@ -51,6 +51,7 @@ export async function handleLeadCapture(request, env = {}) {
     const consentRecord = `${consentText} | ${new Date().toISOString()}`;
     const subscriberResponse = await kitRequest("/subscribers", apiKey, {
       email_address: email,
+      state: "inactive",
       fields: { [consentFieldKey]: consentRecord },
     });
     if (!subscriberResponse.ok) throw new Error("subscriber_failed");
