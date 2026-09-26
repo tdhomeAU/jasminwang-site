@@ -3,109 +3,101 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="AI 总舵手：从一堆事儿里，找到真正值得推进的第一杠杆任务。澳洲茉莉 AI 技能库。"
-    />
+    <meta name="description" content="AI 总舵手：从一堆事里，找到今天真正值得推进的第一杠杆。接住待办与想法，把注意力留给最多三只大青蛙。" />
     <title>AI 总舵手 — 澳洲茉莉 AI 技能库</title>
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23102a43'/%3E%3Cpath d='M19 19h9v22c0 3 1 5 4 5 4 0 5-3 5-7V19h9v21c0 10-6 15-15 15-8 0-12-5-12-13V19Z' fill='%23f7f3eb'/%3E%3Ccircle cx='47' cy='17' r='5' fill='%23e45d52'/%3E%3C/svg%3E"
-    />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23102a43'/%3E%3Cpath d='M19 19h9v22c0 3 1 5 4 5 4 0 5-3 5-7V19h9v21c0 10-6 15-15 15-8 0-12-5-12-13V19Z' fill='%23f7f3eb'/%3E%3Ccircle cx='47' cy='17' r='5' fill='%23e45d52'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../assets/styles.css" />
+    <link rel="stylesheet" href="../../assets/skill-detail-v2.css" />
   </head>
-  <body>
+  <body class="skill-detail-v2">
     <header class="site-header">
       <div class="shell nav">
-        <a class="brand" href="../" aria-label="返回 AI 技能库">
-          <span class="brand-mark" aria-hidden="true">JW</span>澳洲茉莉
-        </a>
+        <a class="brand" href="../" aria-label="返回 AI 技能库"><span class="brand-mark" aria-hidden="true">JW</span>澳洲茉莉</a>
         <a class="nav-label" href="../">AI 技能库</a>
       </div>
     </header>
 
     <main>
-      <section class="shell detail-hero">
-        <div>
+      <section class="shell v2-hero" aria-labelledby="skill-title">
+        <div class="v2-hero-copy">
           <a class="back-link" href="../">返回 AI 技能库</a>
-          <p class="eyebrow">AI Chief Agent</p>
-          <h1 class="detail-title" data-skill-name>AI 总舵手</h1>
-          <p class="detail-summary" data-summary></p>
+          <p class="v2-kicker">每日杠杆决策 Skill</p>
+          <h1 id="skill-title">AI 总舵手</h1>
+          <p class="v2-outcome">从一堆事里，找到今天真正值得推进的<span>第一杠杆。</span></p>
+          <p class="v2-intro">把待办、想法、承诺和机会全部倒给 AI。它帮你看全局、找杠杆、留下最多三只真正需要你注意力的大青蛙，其余交给 AI、批处理或暂缓。</p>
+          <a class="v2-hero-link" href="#download">免费获取完整 Skill <span aria-hidden="true">↗</span></a>
         </div>
-        <aside class="detail-aside">
-          <div class="skill-meta">
-            <span class="tag" data-type></span>
-            <span class="tag" data-version></span>
-          </div>
-          <p data-category-name></p>
-          <p class="leverage-note">做完这一件，<br />让其他事情<br /><em>更容易。</em></p>
-          <a class="text-link" href="#download">免费获取这个 Skill</a>
-        </aside>
+        <div class="v2-hero-note" aria-label="从纷杂事项到清晰重点">
+          <span class="v2-note-label">把复杂交给 AI</span>
+          <div class="v2-note-line"><span>待办 · 想法 · 承诺 · 机会</span><span aria-hidden="true">↓</span></div>
+          <strong>第一杠杆</strong>
+          <p>你只专注真正需要你完成的结果。</p>
+          <span class="v2-note-index">01 / 03</span>
+        </div>
       </section>
 
-      <div class="shell detail-content">
-        <section class="detail-block">
-          <h2 class="section-title">它是什么</h2>
-          <div>
-            <h3 class="content-title">它不是另一个待办清单。</h3>
-            <p class="detail-block-copy" data-description></p>
-            <ul class="decision-list" data-decisions></ul>
+      <section class="v2-section v2-results" aria-labelledby="results-title">
+        <div class="shell">
+          <div class="v2-heading"><p class="v2-kicker">从输入到结果</p><h2 id="results-title">它能帮你做什么</h2><p>你把事情倒出来，AI 负责判断与分流。</p></div>
+          <div class="v2-result-grid">
+            <article class="v2-result-card"><span class="v2-number">01</span><h3>接住全部事情</h3><p>不用先分类，把待办、想法、承诺和机会全部倒进来。</p></article>
+            <article class="v2-result-card"><span class="v2-number">02</span><h3>找到第一杠杆</h3><p>结合目标和现实约束，找出那件做完以后，会让其他事情更容易、更清楚，甚至变得没必要的事。</p></article>
+            <article class="v2-result-card"><span class="v2-number">03</span><h3>留下最多三只大青蛙</h3><p>只保留真正需要你注意力的结果；能交 AI 的交 AI，其余进入批处理、新芽或暂缓。</p></article>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="detail-block">
-          <h2 class="section-title">它解决什么问题</h2>
-          <div>
-            <p class="attention-statement">想法很多、项目很多、AI 工具也越来越多，<br /><strong>但人的注意力仍然只有一份。</strong></p>
-            <p class="detail-block-copy" data-problem></p>
+      <section class="v2-section v2-method" aria-labelledby="method-title">
+        <div class="shell v2-method-layout">
+          <div class="v2-method-intro"><p class="v2-kicker">背后的判断方法</p><h2 id="method-title">它不是普通<br />To-do List</h2><p>AI 总舵手用四步判断，把复杂留给 AI。</p></div>
+          <ol class="v2-method-steps">
+            <li><span>01</span><div><h3>接住全局</h3><p>今天必须发生什么？脑子里还有哪些待办、想法、承诺和机会？</p></div></li>
+            <li><span>02</span><div><h3>对齐方向</h3><p>同时看长期目标、阶段重点、现实时间和当天容量。</p></div></li>
+            <li><span>03</span><div><h3>找到第一杠杆</h3><p>哪件事做完，会让其他事情更容易、更清楚，甚至变得没必要？</p></div></li>
+            <li><span>04</span><div><h3>重新分配注意力</h3><p>最多三只大青蛙；AI 能做的交 AI；其余批处理、保存或暂缓。</p></div></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="v2-section v2-scenarios" aria-labelledby="scenarios-title">
+        <div class="shell">
+          <div class="v2-heading"><p class="v2-kicker">具体使用场景</p><h2 id="scenarios-title">什么时候用</h2><p>遇到下面这些时刻，就打开 AI 总舵手。</p></div>
+          <div class="v2-scenario-grid">
+            <article><span class="v2-number">01 / 接住</span><h3>脑子很乱的时候</h3><blockquote>“我把今天所有事情倒给你，你先接住。”</blockquote></article>
+            <article><span class="v2-number">02 / 取舍</span><h3>待办太多的时候</h3><blockquote>“不要只按紧急重要排序，帮我找今天的第一杠杆。”</blockquote></article>
+            <article><span class="v2-number">03 / 挑战</span><h3>突然冒出一个新机会的时候</h3><blockquote>“帮我判断这件事值不值得替换今天原来的重点。”</blockquote></article>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="detail-block">
-          <div><h2 class="section-title">四个核心设计</h2><p class="section-caption">让 AI 托住复杂。</p></div>
-          <ol class="principles" data-mechanism></ol>
-        </section>
+      <section class="v2-section v2-start" aria-labelledby="start-title">
+        <div class="shell v2-start-layout">
+          <div><p class="v2-kicker">第一次使用</p><h2 id="start-title">怎么开始用</h2><p class="v2-start-copy">下载完整 Skill 后，在支持 Skills / Agent Instructions 的 AI 环境中使用。把今天脑子里的事情直接说出来，不用先整理。</p><p class="v2-start-principle">一句话帮你开始，完整 Skill 才负责持续判断和执行。</p></div>
+          <div class="v2-starter"><span>一句启动语</span><blockquote>我把今天脑子里的事情全部倒给你，你先接住，不用我分类。</blockquote><a href="#download">获取完整 Skill <span aria-hidden="true">↗</span></a></div>
+        </div>
+      </section>
 
-        <section class="detail-block">
-          <h2 class="section-title">适用场景</h2>
-          <div>
-            <h3 class="content-title">特别适合：</h3>
-            <ul class="scenario-list" data-scenarios></ul>
-            <p class="closing-thought">你仍然是方向的决定者；AI 总舵手负责让注意力、项目与 AI 执行重新对齐。</p>
+      <section class="v2-section v2-download" id="download" aria-labelledby="download-title">
+        <div class="shell v2-download-layout">
+          <div class="v2-download-copy"><p class="v2-kicker">从今天开始</p><h2 id="download-title">免费获取完整<br />AI 总舵手 Skill</h2><p>留下 Email 并同意接收相关更新。提交成功后在网页立即下载，邮箱也会收到确认邮件。</p></div>
+          <div class="v2-download-action">
+            <button class="button" type="button" data-open-lead-form aria-expanded="false" aria-controls="lead-form">免费获取完整 Skill <span aria-hidden="true">↗</span></button>
+            <form class="lead-form" id="lead-form" data-lead-form hidden>
+              <h3>免费获取完整 AI 总舵手 Skill</h3>
+              <p>留下 Email，提交成功后即可在网页下载。</p>
+              <label class="lead-field-label" for="lead-email">Email</label>
+              <input id="lead-email" name="email" type="email" autocomplete="email" required />
+              <label class="consent-option"><input name="consent" type="checkbox" value="true" required /><span>获取 AI 总舵手，同时接收澳洲茉莉的 AI 实战、新 Skill 与相关更新，可随时退订。</span></label>
+              <button class="button" type="submit">立即获取 AI 总舵手 ↓</button>
+              <p class="lead-form-status" data-form-status role="status" aria-live="polite" hidden></p>
+            </form>
+            <section class="lead-success" data-success-state role="status" aria-live="polite" hidden></section>
           </div>
-        </section>
-
-        <section class="download-panel" id="download" aria-labelledby="download-title">
-          <div>
-            <h2 id="download-title">免费获取 AI 总舵手</h2>
-            <p>下载完整 Skill，在支持 Skills 的 AI 工作环境中使用。</p>
-          </div>
-          <div class="download-action"><button class="button" type="button" data-open-lead-form aria-expanded="false" aria-controls="lead-form">免费获取 AI 总舵手 ↓</button></div>
-          <form class="lead-form" id="lead-form" data-lead-form hidden>
-            <h3>免费获取完整 AI 总舵手 Skill</h3>
-            <p>留下 Email，马上下载完整版；下载链接也会同时发到你的邮箱。</p>
-            <label class="lead-field-label" for="lead-email">Email</label>
-            <input id="lead-email" name="email" type="email" autocomplete="email" required />
-            <label class="consent-option">
-              <input name="consent" type="checkbox" value="true" required />
-              <span>获取 AI 总舵手，同时接收澳洲茉莉的 AI 实战、新 Skill 与相关更新，可随时退订。</span>
-            </label>
-            <button class="button" type="submit">立即获取 AI 总舵手 ↓</button>
-            <p class="lead-form-status" data-form-status role="status" aria-live="polite" hidden></p>
-          </form>
-          <section class="lead-success" data-success-state role="status" aria-live="polite" hidden></section>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
 
-    <footer class="site-footer">
-      <div class="shell footer-row">
-        <span>© 2026 澳洲茉莉 · Jasmin Wang</span>
-        <span>Thinking → Method → Skill → Result</span>
-      </div>
-    </footer>
-
+    <footer class="site-footer"><div class="shell footer-row"><span>© 2026 澳洲茉莉 · Jasmin Wang</span><span>Thinking → Method → Skill → Result</span></div></footer>
     <script type="module" src="../../assets/detail.js"></script>
   </body>
 </html>
