@@ -6,6 +6,14 @@ const publishedSkills = catalog.skills.filter((skill) => skill.status === "publi
 
 function downloadButton(label, skills, className = "button secondary") {
   const available = skills.filter(isPubliclyDownloadable);
+  const gatedSkill = available.find((skill) => skill.leadCaptureRequired);
+  if (gatedSkill) {
+    const link = document.createElement("a");
+    link.className = className;
+    link.textContent = label.replace(/^下载/, "免费获取") + " ↓";
+    link.href = "./" + gatedSkill.slug + "/#download";
+    return link;
+  }
   // Never generate bundles from private source files.
   if (available.length === 1) {
     const link = document.createElement("a");
