@@ -134,6 +134,7 @@
   background: var(--paper);
 }
 .skill-detail-comparison .v2-download-action > .button { width: 100%; justify-content: space-between; }
+.skill-detail-comparison .v2-download-action > .button[aria-expanded="true"] { display: none; }
 .skill-detail-comparison .v2-download .lead-form,
 .skill-detail-comparison .v2-download .lead-success { border-color: var(--line); }
 .skill-detail-comparison .v2-download .lead-form h3,
