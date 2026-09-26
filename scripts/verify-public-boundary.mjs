@@ -69,7 +69,7 @@ for (const release of manifest.releases) {
     failures.push(release.slug + " has no passed release receipt");
     continue;
   }
-  if (!/^\\/downloads\\/[^/\\\\]+\\.zip$/.test(release.artifact) ||
+  if (!/^\/downloads\/[^/\\]+\.zip$/.test(release.artifact) ||
       basename(receipt.approvedFile) !== receipt.approvedFile) {
     failures.push(release.slug + " has an invalid download path");
     continue;
