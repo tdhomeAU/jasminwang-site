@@ -402,6 +402,10 @@
 .skill-detail-editorial .v2-outcome { max-width: 650px; font-size: clamp(1.7rem, 2.65vw, 2.65rem); line-height: 1.45; }
 .skill-detail-editorial .v2-outcome .v2-outcome-line { display: block; color: var(--navy); }
 .skill-detail-editorial .v2-outcome .v2-keyword { display: block; width: fit-content; color: var(--coral); white-space: nowrap; border-bottom: 2px solid rgb(228 93 82 / .25); }
+.skill-detail-editorial .v2-intro { font-size: 1.15rem; line-height: 1.85; }
+.skill-detail-editorial .v2-heading > p:last-child { font-size: 1.14rem; line-height: 1.75; }
+.skill-detail-editorial .v2-method-intro > p:last-child { font-size: 1.16rem; }
+.skill-detail-editorial .v2-start-copy { font-size: 1.14rem; }
 .skill-detail-editorial .v2-hero-note {
   min-height: 365px;
   margin-top: 76px;
@@ -424,6 +428,8 @@
 .skill-detail-editorial .v2-method h2 { font-size: clamp(3rem, 5vw, 4.8rem); }
 .skill-detail-editorial .v2-method-steps li { min-height: 160px; padding-block: 26px; }
 .skill-detail-editorial .v2-scenario-grid article { background: var(--paper); border-top-color: var(--coral); }
+.skill-detail-editorial .v2-scenario-grid h3 { margin-top: 36px; font-size: clamp(1.8rem, 2.3vw, 2.3rem); line-height: 1.3; }
+.skill-detail-editorial .v2-scenario-grid blockquote { color: var(--charcoal); opacity: .8; font-size: 1.1rem; line-height: 1.75; }
 .skill-detail-editorial .v2-start { padding-top: 20px; }
 .skill-detail-editorial .v2-starter { box-shadow: 8px 10px 0 rgb(228 93 82 / .07); }
 .skill-detail-editorial .v2-download { padding-block: 80px; }
@@ -433,8 +439,16 @@
 .skill-detail-editorial .v2-download-action { padding: 32px; }
 .skill-detail-editorial .v2-download .lead-form,
 .skill-detail-editorial .v2-download .lead-success { margin: 0; padding: 0; border: 0; }
+.skill-detail-editorial .v2-download .lead-form h3 { margin-bottom: 10px; font-size: 1.7rem; }
+.skill-detail-editorial .v2-download .lead-form > p { margin-bottom: 25px; font-size: .95rem; line-height: 1.65; }
+.skill-detail-editorial .v2-download .lead-field-label { margin-bottom: 9px; font-size: .83rem; letter-spacing: .025em; }
+.skill-detail-editorial .v2-download .lead-form input[type="email"] { width: 100%; min-height: 54px; padding: 13px 16px; background: var(--ivory); border: 1px solid var(--line); border-radius: 2px; }
+.skill-detail-editorial .v2-download .lead-form input[type="email"]:focus-visible,
+.skill-detail-editorial .v2-download .consent-option input:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
+.skill-detail-editorial .v2-download .consent-option { margin: 22px 0 24px; gap: 12px; font-size: .86rem; line-height: 1.65; }
+.skill-detail-editorial .v2-download .consent-option input { width: 18px; height: 18px; margin-top: 3px; }
 .skill-detail-editorial .v2-download .lead-success h2 { font-size: 1.7rem; line-height: 1.4; }
-.skill-detail-editorial .v2-download .lead-form .button { width: 100%; min-width: 0; }
+.skill-detail-editorial .v2-download .lead-form .button { width: 100%; min-width: 0; min-height: 54px; font-weight: 700; letter-spacing: .015em; }
 .skill-detail-editorial .v2-download .button { background: var(--coral); color: var(--navy); border-color: var(--coral); }
 .skill-detail-editorial .v2-download .button:hover:not(:disabled) { background: var(--coral); border-color: var(--coral); color: var(--navy); box-shadow: inset 0 0 0 100px rgb(0 0 0 / .07); }
 .skill-detail-editorial .v2-download .lead-form-status { color: var(--charcoal) !important; border-left: 2px solid var(--coral); padding-left: 12px; }
@@ -459,4 +473,5 @@
   .skill-detail-editorial .v2-download h2 { font-size: clamp(2.35rem, 8.5vw, 3.8rem); }
   .skill-detail-editorial .v2-download-action { padding: 24px; }
   .skill-detail-editorial .v2-download .lead-success h2 { font-size: 1.6rem; }
+  .skill-detail-editorial .v2-scenario-grid h3 { margin-top: 26px; }
 }
