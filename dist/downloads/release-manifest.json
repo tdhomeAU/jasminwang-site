@@ -7,8 +7,8 @@
       "slug": "chief-agent",
       "sourceId": "chief-agent-daily-leverage",
       "customerEdition": "V0.1",
-      "status": "in-review",
-      "artifact": null
+      "status": "published",
+      "artifact": "/downloads/chief-agent-daily-leverage-v0.1-public.zip"
     }
   ]
 }

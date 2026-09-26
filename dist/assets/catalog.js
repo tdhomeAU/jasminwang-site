@@ -49,9 +49,10 @@ export const catalog = {
       type: "Core System",
       version: "V0.1",
       status: "published",
+      leadCaptureRequired: true,
       publicRelease: {
-        status: "in-review",
-        artifact: null,
+        status: "published",
+        artifact: "/downloads/chief-agent-daily-leverage-v0.1-public.zip",
       },
       summary: "从一堆事儿里，找到真正值得推进的第一杠杆任务。",
       description:

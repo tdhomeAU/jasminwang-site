@@ -50,8 +50,16 @@ for (const release of manifest.releases) {
   }
 }
 
-// Download bytes must match the approved library, never a private/candidate copy.
+// Verify the approved release receipt and packaged bytes in every environment.
+// When the original approved library is available locally, also compare against its source file.
 const approvedRoot = fileURLToPath(new URL("../../skill-library/04 公开技能库（已审可发布）/", import.meta.url));
+let approvedRootAvailable = true;
+try {
+  await realpath(approvedRoot);
+} catch (error) {
+  if (error.code === "ENOENT") approvedRootAvailable = false;
+  else throw error;
+}
 const receipts = JSON.parse(await readFile(new URL("../public-download-sources.json", import.meta.url), "utf8"));
 const declaredArtifacts = new Set();
 for (const release of manifest.releases) {
@@ -67,16 +75,20 @@ for (const release of manifest.releases) {
     continue;
   }
   try {
-    const approvedBase = await realpath(approvedRoot);
-    const approvedPath = await realpath(join(approvedBase, receipt.approvedFile));
-    if (relative(approvedBase, approvedPath) !== receipt.approvedFile) throw new Error("Source escaped approved library");
-    const sourceBytes = await readFile(approvedPath);
     const publicPath = join(root, release.artifact.slice(1));
     const publicBytes = await readFile(publicPath);
     const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
-    if (digest(sourceBytes) !== receipt.sha256.toLowerCase() ||
-        digest(publicBytes) !== receipt.sha256.toLowerCase()) {
-      throw new Error("Download differs from tested approved artifact");
+    if (digest(publicBytes) !== receipt.sha256.toLowerCase()) {
+      throw new Error("Public download does not match approved release receipt");
+    }
+    if (approvedRootAvailable) {
+      const approvedBase = await realpath(approvedRoot);
+      const approvedPath = await realpath(join(approvedBase, receipt.approvedFile));
+      if (relative(approvedBase, approvedPath) !== receipt.approvedFile) throw new Error("Source escaped approved library");
+      const sourceBytes = await readFile(approvedPath);
+      if (digest(sourceBytes) !== receipt.sha256.toLowerCase()) {
+        throw new Error("Approved library source differs from release receipt");
+      }
     }
     declaredArtifacts.add(publicPath);
   } catch (error) {

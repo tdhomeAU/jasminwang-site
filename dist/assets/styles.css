@@ -886,6 +886,25 @@ a.category-download { color: var(--coral-ink); text-decoration: underline; text-
 .download-action .button { min-width: 190px; }
 .download-action .button:disabled { border-color: var(--coral); background: var(--coral); color: var(--navy); opacity: .65; }
 .download-action p { margin-top: 10px; font-size: .85rem; }
+.lead-form,
+.lead-success { grid-column: 1 / -1; padding-top: 26px; border-top: 1px solid rgba(16, 42, 67, .16); }
+.lead-form[hidden],
+.lead-success[hidden] { display: none; }
+.lead-form h3,
+.lead-success h2 { margin: 0 0 9px; color: var(--navy); font-family: var(--serif); font-size: 1.65rem; line-height: 1.35; }
+.lead-form > p { margin: 0 0 18px; color: #5d4c48; }
+.lead-field-label { display: block; margin-bottom: 7px; color: var(--navy); font-size: .88rem; font-weight: 700; }
+.lead-form input[type="email"] { width: min(100%, 460px); min-height: 48px; padding: 10px 14px; color: var(--charcoal); background: var(--paper); border: 1px solid rgba(16, 42, 67, .28); border-radius: 4px; font: inherit; }
+.consent-option { display: flex; max-width: 760px; margin: 16px 0 20px; align-items: flex-start; gap: 10px; color: #5d4c48; font-size: .86rem; line-height: 1.6; }
+.consent-option input { flex: 0 0 auto; width: 17px; height: 17px; margin: 3px 0 0; accent-color: var(--coral); }
+.lead-form .button { min-width: 225px; }
+.lead-form-status { margin: 14px 0 0 !important; color: #a33128 !important; font-size: .9rem; }
+.lead-success .download-now { margin: 18px 0 12px; color: var(--coral-ink); font-family: var(--mono); font-size: .88rem; }
+.lead-success .button { margin-bottom: 20px; }
+.lead-success > p { max-width: 680px; margin: 0 0 10px; color: #5d4c48; }
+.lead-success blockquote { max-width: 760px; margin: 0 0 18px; padding: 15px 18px; color: var(--navy); background: rgba(255, 253, 248, .7); border-left: 2px solid var(--coral); font-family: var(--serif); line-height: 1.75; white-space: pre-line; }
+.lead-success .delivery-note { margin-top: 10px; color: var(--navy); font-size: .9rem; }
+.lead-success .preview-note { margin-top: 16px; color: var(--muted); font-size: .78rem; }
 @media (max-width: 1000px) {
   .library-hero { gap: 30px; grid-template-columns: 1.65fr 1fr; }
   .hero-statement { font-size: 2.6rem; }
