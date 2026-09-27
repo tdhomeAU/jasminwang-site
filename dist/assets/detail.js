@@ -4,35 +4,37 @@ const skill = getSkill("chief-agent");
 if (!skill) {
   document.querySelector("main").innerHTML = '<div class="shell catalog"><h1>暂未提供此 Skill</h1><a href="../">返回 AI 技能库</a></div>';
 } else {
-  const fields = { "skill-name": skill.name, summary: skill.summary, description: skill.description, problem: skill.problem, "category-name": getCategory(skill.categoryId).name, type: skill.type, version: skill.version };
-  Object.entries(fields).forEach(([key, value]) => {
-    document.querySelector("[data-" + key + "]").textContent = value;
-  });
-  for (const key of ["decisions", "scenarios"]) {
-    skill[key].forEach((text) => {
+  if (!document.body.classList.contains("skill-detail-v2")) {
+    const fields = { "skill-name": skill.name, summary: skill.summary, description: skill.description, problem: skill.problem, "category-name": getCategory(skill.categoryId).name, type: skill.type, version: skill.version };
+    Object.entries(fields).forEach(([key, value]) => {
+      document.querySelector("[data-" + key + "]").textContent = value;
+    });
+    for (const key of ["decisions", "scenarios"]) {
+      skill[key].forEach((text) => {
+        const item = document.createElement("li");
+        item.textContent = text;
+        document.querySelector("[data-" + key + "]").append(item);
+      });
+    }
+    skill.mechanism.forEach((step, index) => {
       const item = document.createElement("li");
-      item.textContent = text;
-      document.querySelector("[data-" + key + "]").append(item);
+      item.className = "principle";
+      item.innerHTML = '<span class="principle-number">' + String(index + 1).padStart(2, "0") + '</span><div><h3>' + step.title + '</h3><p>' + step.description + '</p></div>';
+      document.querySelector("[data-mechanism]").append(item);
     });
   }
-  skill.mechanism.forEach((step, index) => {
-    const item = document.createElement("li");
-    item.className = "principle";
-    item.innerHTML = '<span class="principle-number">' + String(index + 1).padStart(2, "0") + '</span><div><h3>' + step.title + '</h3><p>' + step.description + '</p></div>';
-    document.querySelector("[data-mechanism]").append(item);
-  });
   const trigger = document.querySelector("[data-open-lead-form]");
   const form = document.querySelector("[data-lead-form]");
   const formStatus = document.querySelector("[data-form-status]");
   const successState = document.querySelector("[data-success-state]");
 
-  trigger.addEventListener("click", () => {
+  if (trigger) trigger.addEventListener("click", () => {
     form.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
     form.querySelector("input[type=email]").focus();
   });
 
-  form.addEventListener("submit", async (event) => {
+  if (form) form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitButton = form.querySelector("button[type=submit]");
     submitButton.disabled = true;
@@ -75,7 +77,7 @@ if (!skill) {
         successState.append(previewNote);
       }
       form.hidden = true;
-      trigger.hidden = true;
+      if (trigger) trigger.hidden = true;
       successState.hidden = false;
       successState.scrollIntoView({ behavior: "smooth", block: "center" });
     } catch (error) {
@@ -86,6 +88,8 @@ if (!skill) {
   });
 
   if (!isPubliclyDownloadable(skill)) {
-    trigger.disabled = true;
+    if (trigger) trigger.disabled = true;
+    const submitButton = form?.querySelector("button[type=submit]");
+    if (submitButton) submitButton.disabled = true;
   }
 }
