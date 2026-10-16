@@ -1,0 +1,150 @@
+name: Qingshijiu VNext ZIP Delivery
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dist/qingshijiu/index.html'
+      - 'dist/qingshijiu/story/index.html'
+      - '.github/workflows/qingshijiu-vnext-delivery.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+      - name: Build and validate self-contained delivery ZIP
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+          from functools import partial
+          from threading import Thread
+          from urllib.request import urlopen
+          import base64, re, zipfile, tempfile
+          
+          src = Path("dist/qingshijiu")
+          root = Path(".qingshijiu-delivery/site")
+          root.mkdir(parents=True, exist_ok=True)
+          (root / "academy").mkdir(exist_ok=True)
+          (root / "story").mkdir(exist_ok=True)
+          (root / "xinghui").mkdir(exist_ok=True)
+          (root / "assets/story").mkdir(parents=True, exist_ok=True)
+          
+          home = (src / "index.html").read_text(encoding="utf-8")
+          academy = (src / "academy/index.html").read_text(encoding="utf-8")
+          story = (src / "story/index.html").read_text(encoding="utf-8")
+          assert "window.location.assign('story/')" in home
+          assert "window.location.assign('/qingshijiu/xinghui/')" not in home
+          assert 'href="../#home"' in story
+          assert 'href="../#academy"' in story
+          assert "听宋星辉亲自讲述" in story
+          assert 'const VIDEO_URLS={story:' in story
+          assert all(s not in story for s in ("5个月月入百万", "年入百万", "50万级别", "太阳穴一边", "一分钟变美"))
+          
+          names = ["portrait", "portrait", "detail", "face", "event"]
+          seen = {}
+          index = [0]
+          pattern = r'(src=")data:image/jpeg;base64,([A-Za-z0-9+/=]+)(")'
+          def move_asset(m):
+              n = names[index[0]]
+              index[0] += 1
+              data = base64.b64decode(m.group(2))
+              assert data.startswith(b"\xff\xd8\xff")
+              if n in seen:
+                  assert seen[n] == data
+              else:
+                  seen[n] = data
+                  (root / "assets/story" / (n + ".jpg")).write_bytes(data)
+              return m.group(1) + "../assets/story/" + n + ".jpg" + m.group(3)
+          story = re.sub(pattern, move_asset, story)
+          assert index[0] == 5 and len(seen) == 4
+          story = re.sub(r'<meta name="qingshijiu-home-carousel-poster" content="data:image/jpeg;base64,[^"]+">', '<meta name="qingshijiu-home-carousel-poster" content="../assets/story/portrait.jpg">', story)
+          assert story.count('src="../assets/story/') == 5
+          assert "data:image/jpeg;base64" not in story
+          
+          (root / "index.html").write_text(home, encoding="utf-8")
+          (root / "academy/index.html").write_text(academy, encoding="utf-8")
+          (root / "story/index.html").write_text(story, encoding="utf-8")
+          (root / "xinghui/index.html").write_text('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=../story/"><title>宋星辉的故事</title></head><body><a href="../story/">阅读故事</a></body></html>', encoding="utf-8")
+          (root / "README.md").write_text("""# 轻拾玖小程序网站 VNext · 技术交付
+          
+          仅包含轻拾玖静态网站，与个人网站其他页面和密钥无关。
+          
+          ## 快速运行
+          解压后进入站点目录，运行 \`python -m http.server 8000\`，访问 http://localhost:8000/ 。
+          上线建议部署在 /qingshijiu/，并开启目录 index.html 服务。
+          
+          ## 文件
+          index.html：完整主展示页（仅修改 AI高科美轮播入口）；academy/index.html：原商学院；
+          story/index.html：宋星辉故事长页；xinghui/index.html：旧链接兼容；
+          assets/story/*.jpg：故事页四张 JPEG，来自既有内嵌图片；
+          VIDEO_INTEGRATION.md：视频配置说明；NAVIGATION.md：跳转关系；
+          CONTENT_REVIEW.md：待人工核验的内容和授权清单。
+          
+          所有展示所需的 HTML/CSS/JavaScript/图片已内嵌或位于站点目录内，无需外部依赖或账号密钥，不包含视频文件。
+          主展示页的原 iframe/srcdoc 结构保持不变。微信小程序 web-view 须配置业务域名并做设备实测。
+          """,encoding="utf-8")
+          (root / "NAVIGATION.md").write_text("""# 页面导航
+          - /qingshijiu/ 对应 index.html，包含原有美善一生、集团介绍、万联小店、AI老板军师团、案例素材、商学院等模块。
+          - 首页轮播「AI高科美 · 立即体验」仅跳转 story/；其他轮播按钮保持原有目标。
+          - /qingshijiu/story/ 对应 story/index.html。
+          - 故事页返回首页 ../#home；了解商学院 ../#academy；图片区 #changes；视频区 #video。
+          - academy/index.html 为既有商学院独立页面。
+          - 旧地址 xinghui/ 在该交付包中跳转至 story/。
+          """,encoding="utf-8")
+          (root / "VIDEO_INTEGRATION.md").write_text("""# 视频接入
+          在 story/index.html 搜索 \`const VIDEO_URLS\`：
+          \`\`\`js
+          const VIDEO_URLS={story:'',experience:'',event:''};
+          \`\`\`
+          三项依次对应：事业转折、个人体验、活动分享。
+          空值时卡片只是视觉占位，不会尝试播放或下载视频。需使用取得授权、在微信 web-view 内合规可访问的 HTTPS 视频直链，测试视频格式、域名白名单、跨域、playsinline、加载速度。不要加入视频文件到本 ZIP。
+          """,encoding="utf-8")
+          (root / "CONTENT_REVIEW.md").write_text("""# 需人工核验的内容（内部交付资料；不要放在对外页面）
+          
+          - [ ] 确认宋星辉及活动现场其他人物的肖像发布授权；核实四张照片拍摄时间、归属、是否使用美颜滤镜、拼接或后期修饰。
+          - [ ] 不能将人物合成/拼图照片作为使用前后效果或产品疗效证据。
+          - [ ] 核实家臣总、黄总、雅蓉、红人聚等身份与故事关系，“服务上万个老板”及 2026 年 1 月的关键经历。
+          - [ ] 原稿“5个月月入百万”“年入百万”等仅是未经核验的个人陈述，未写入安全公开稿；未来使用需证据和适用法规审查，绝不能保证普遍收益。
+          - [ ] 原稿“朋友付4万”“50万级别”“太阳穴两侧20万”等价格对比未经核实，不得未经批准上广告。
+          - [ ] 原稿“一分钟变美、十分钟学会”等功效主张已移除；如需重新使用，应核实适用医疗美容、化妆品及广告相关规定。
+          - [ ] 核实活动照片拍摄场景及授权，不得暗示销量和收益。
+          - [ ] 审阅已有主页及商学院其他宣传用语，微信内置浏览器、iOS、Android、桌面端上线前逐项验收。
+          """,encoding="utf-8")
+          
+          # Exercise all delivered routes and images through an actual HTTP server.
+          server = ThreadingHTTPServer(("127.0.0.1",0),partial(SimpleHTTPRequestHandler,directory=str(root)))
+          thread = Thread(target=server.serve_forever,daemon=True)
+          thread.start()
+          base = f"http://127.0.0.1:{server.server_port}"
+          for url in ("/", "/academy/", "/story/", "/xinghui/", "/assets/story/portrait.jpg", "/assets/story/detail.jpg", "/assets/story/face.jpg", "/assets/story/event.jpg"):
+              with urlopen(base + url,timeout=10) as response:
+                  assert response.status == 200 and response.read(16)
+          server.shutdown()
+          assert re.search(r'@media\(max-width:700px\)',story)
+          assert 'VIDEO_URLS={story:\'\',experience:\'\',event:\'\'}' in story
+          
+          outfile = Path(".qingshijiu-delivery/qingshijiu-vnext-20261016.zip")
+          with zipfile.ZipFile(outfile,"w",compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
+              for f in sorted(root.rglob("*")):
+                  if f.is_file():
+                      z.write(f, f.relative_to(root).as_posix())
+          with zipfile.ZipFile(outfile) as z:
+              assert z.testzip() is None
+              required={"index.html","academy/index.html","story/index.html","xinghui/index.html",
+                "assets/story/portrait.jpg","assets/story/detail.jpg","assets/story/face.jpg","assets/story/event.jpg",
+                "README.md","NAVIGATION.md","VIDEO_INTEGRATION.md","CONTENT_REVIEW.md"}
+              assert required.issubset(set(z.namelist()))
+          print("PACKAGE_OK",outfile,"bytes",outfile.stat().st_size,"files",len(required))
+          
+          PY
+      - name: Publish downloadable ZIP as GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="qingshijiu-vnext-20261016"
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --target "$GITHUB_SHA" --title "轻拾玖 VNext 技术交付" --notes "独立静态网站及图片、导航、视频接入和合规审核说明。"
+          gh release upload "$TAG" .qingshijiu-delivery/qingshijiu-vnext-20261016.zip --clobber
