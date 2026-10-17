@@ -36,7 +36,9 @@ jobs:
           home = (src / "index.html").read_text(encoding="utf-8")
           academy = (src / "academy/index.html").read_text(encoding="utf-8")
           story = (src / "story/index.html").read_text(encoding="utf-8")
-          assert "window.location.assign('story/')" in home
+          assert "go.addEventListener('click',()=>setPage('aibeauty'));" in home
+          assert "q9InstallGroupPoster(doc)" in home
+          assert "pages.aibeauty=" in home
           assert "window.location.assign('/qingshijiu/xinghui/')" not in home
           assert 'href="../#home"' in story
           assert 'href="../#academy"' in story
@@ -78,7 +80,7 @@ jobs:
           上线建议部署在 /qingshijiu/，并开启目录 index.html 服务。
           
           ## 文件
-          index.html：完整主展示页（仅修改 AI高科美轮播入口）；academy/index.html：原商学院；
+          index.html：完整主展示页（集团轮播更新，AI高科美轮播与介绍页更新）；academy/index.html：原商学院；
           story/index.html：宋星辉故事长页；xinghui/index.html：旧链接兼容；
           assets/story/*.jpg：故事页四张 JPEG，来自既有内嵌图片；
           VIDEO_INTEGRATION.md：视频配置说明；NAVIGATION.md：跳转关系；
