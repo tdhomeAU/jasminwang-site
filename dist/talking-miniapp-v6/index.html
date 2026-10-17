@@ -1,0 +1,195 @@
+<!doctype html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<meta content="#f7f3eb" name="theme-color"/>
+<title>会说话的营销小程序 / 网页｜四幕商业电影 · V6 审阅版</title>
+<meta content="会说话的营销小程序 / 网页：通过四幕商业电影，让客户关注你、认识你、相信你的价值，并主动选择。一次投资，两份长期商业资产。标准内容服务¥29,800。" name="description"/>
+<style>
+:root{--paper:#f7f3eb;--white:#fffdfa;--navy:#102a43;--coral:#e45d52;--coral-dark:#b94236;--ink:#253445;--gray:#69717a;--line:#ded9ce;--sand:#eee8dc}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:86px}body{margin:0;color:var(--ink);background:var(--paper);font-family:Inter,"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.8;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button,input{font:inherit}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--coral);outline-offset:3px}
+h1,h2,.serif{font-family:"Songti SC","STSong","Noto Serif CJK SC",Georgia,serif;font-weight:600;line-height:1.4;letter-spacing:-.035em}h2{font-size:clamp(30px,4vw,52px);color:var(--navy);margin:10px 0 22px}p{margin:0 0 18px}.wrap{width:min(1160px,calc(100% - 46px));margin:auto}.section{padding:94px 0}.muted{color:var(--gray)}.eyebrow{font-size:11px;font-weight:750;letter-spacing:.16em;color:var(--coral-dark);margin-bottom:14px;text-transform:uppercase}.accent{color:var(--coral-dark)}.btn{display:inline-flex;align-items:center;justify-content:center;text-align:center;gap:9px;min-height:48px;padding:12px 22px;font-weight:700;font-size:14px;border-radius:4px;border:1px solid transparent;cursor:pointer}.btn.primary{color:var(--navy);background:var(--coral)}.btn.primary:hover{background:#ee786c}.btn.outline{border-color:#a5a9a7;color:var(--navy)}.btn.light{background:var(--paper);color:var(--navy)}.actions{display:flex;gap:12px;flex-wrap:wrap}.head{max-width:800px;margin:0 0 34px}.head.center{margin:0 auto 40px;text-align:center}.head>p{font-size:16px;line-height:2;color:var(--gray)}
+.nav{position:sticky;top:0;z-index:100;background:#f7f3ebf0;border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}.nav-in{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{font-family:"Songti SC",serif;font-size:20px;font-weight:750;color:var(--navy);line-height:1.22}.brand small{display:block;font:10px Inter,sans-serif;letter-spacing:.12em;color:#75808a;margin-top:3px}.navlinks{display:flex;gap:20px;font-size:12px;color:#5b636b}
+.hero{padding:70px 0 25px}.hero-grid{display:grid;grid-template-columns:1.07fr .93fr;gap:65px;align-items:center}.hero h1{font-size:clamp(44px,5.3vw,74px);margin:12px 0 23px;color:var(--navy)}.hero-benefit{font-size:clamp(21px,2.3vw,29px);font-weight:680;line-height:1.65;color:var(--navy);letter-spacing:-.025em}.hero-desc{max-width:560px;font-size:16px;color:#4f5861;line-height:2}.hero-note{font-size:12px;color:#778087;margin-top:18px}.hero-foot{display:flex;align-items:center;gap:18px;margin-top:38px;padding:17px 0;border-top:1px solid var(--line);font-family:"Songti SC",serif;color:var(--navy);font-size:16px}.hero-foot b{letter-spacing:.12em;font:700 10px Inter,sans-serif;color:var(--coral-dark)}
+.mock{padding:25px 32px 10px;position:relative;background:radial-gradient(ellipse at 50% 50%,#e8daca 0,transparent 70%)}.phone{width:min(100%,310px);margin:auto;background:#0d1d30;border:9px solid #0d1d30;border-radius:34px;box-shadow:0 30px 58px #102a4339;transform:rotate(1.5deg)}.notch{background:#091727;width:76px;height:10px;margin:6px auto 12px;border-radius:20px}.screen{background:var(--white);min-height:476px;border-radius:21px;overflow:hidden}.screen-cover{background:var(--navy);padding:27px 20px;color:var(--white)}.screen-cover small{color:#f0b9ac;letter-spacing:.12em;font-size:10px}.screen-cover h3{font:600 26px/1.42 "Songti SC",serif;margin:18px 0}.screen-cover p{font-size:11px;color:#d0d8de;margin:0}.screen-list{padding:18px 14px}.screen-card{background:#f5f0e8;border-left:3px solid var(--coral);padding:10px 13px;margin-bottom:10px;font-size:12px;color:var(--navy)}.screen-card small{display:block;font-size:10px;color:#68747c}.screen-action{padding:10px;text-align:center;background:var(--coral);color:var(--navy);font-size:11px;font-weight:800}.float{position:absolute;background:#fffdfa;border:1px solid #e1c7a6;color:var(--navy);box-shadow:0 15px 28px #24324722;font-size:12px;font-weight:700;padding:13px;max-width:150px}.float.a{top:96px;left:0;transform:rotate(-5deg)}.float.b{bottom:55px;right:0;transform:rotate(5deg)}
+.dark{background:var(--navy);color:var(--white)}.dark h2{color:var(--white)}.dark .eyebrow{color:#ffc7ba}.dark .head p{color:#cbd5dd}.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0}.problem-grid article{padding:26px 26px 20px 0;border-top:1px solid #ffffff40}.problem-grid span{font-size:11px;color:#f3bbae}.problem-grid h3{font-size:19px;line-height:1.5;margin:11px 0}.problem-grid p{font-size:14px;color:#c7d2d9}.statement{font-family:"Songti SC",serif;border-top:1px solid #ffffff30;margin-top:25px;padding-top:25px;font-size:24px;line-height:1.7}.statement em{color:#ffbcb3;font-style:normal}
+.comparison{display:grid;grid-template-columns:1fr 60px 1fr;align-items:center;gap:13px}.compare{padding:30px;background:#ebe6de;min-height:340px}.compare.alive{background:var(--navy);color:white}.compare small{color:var(--coral-dark);letter-spacing:.1em;font-size:11px}.compare.alive small{color:#ffc8bc}.compare h3{font:600 25px/1.5 "Songti SC",serif}.compare p{font-size:14px;line-height:1.9}.compare .mini-list{margin:23px 0;display:grid;gap:8px}.compare .mini-list span{border:1px solid #d3cabe;padding:9px 11px;background:#fff8;font-size:12px}.compare.alive .mini-list{grid-template-columns:1fr 1fr}.compare.alive .mini-list span{background:#ffffff12;border-color:#ffffff25;text-align:center}.versus{text-align:center;font:600 28px Georgia,serif;color:var(--coral-dark)}.motto{text-align:center;margin:30px 0 0;font-size:16px}.motto b{font-size:22px;color:var(--navy);font-family:"Songti SC",serif}
+.aida{display:grid;grid-template-columns:repeat(4,1fr);border-block:1px solid var(--navy)}.aida article{padding:28px 20px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:11px}.aida article:last-child{border:0}.aida .letter{font:600 70px Georgia,serif;line-height:1;color:var(--coral-dark)}.aida h3{font:600 26px "Songti SC",serif;color:var(--navy);margin:5px 0}.aida article small{font-size:12px;color:var(--coral-dark)}.aida p{font-size:14px;color:var(--gray);flex:1}.aida .output{padding:12px;background:var(--white);border-top:2px solid var(--coral);font-size:12px;line-height:1.8;color:#57616b}.aida .output strong{display:block;color:var(--navy)}.method-note{border-left:3px solid var(--coral);margin:27px 0 0;padding:11px 20px;background:var(--white);color:#58646d}
+.flow-section{background:var(--sand)}.flow-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.flow-grid article{background:var(--white);border:1px solid var(--line);padding:21px}.flow-grid article:nth-child(2),.flow-grid article:nth-child(4){background:var(--navy);color:white}.flow-grid small{color:var(--coral-dark)}.flow-grid article:nth-child(2) small,.flow-grid article:nth-child(4) small{color:#f8c1b5}.flow-grid h3{font-size:17px}.flow-grid p{font-size:13px;margin:0}.flow-loop{margin-top:24px;text-align:center;color:var(--gray);font-size:14px}
+.assets{display:grid;grid-template-columns:repeat(2,1fr);gap:19px}.asset{padding:34px;background:var(--white);border:1px solid var(--line);min-height:310px}.asset:nth-child(2){background:var(--navy);color:white}.asset small{color:var(--coral-dark)}.asset:nth-child(2) small{color:#ffc8bc}.asset h3{font:600 30px/1.45 "Songti SC",serif;margin:16px 0}.asset p{font-size:14px}.asset:nth-child(2) p{color:#d4dee4}.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.pills span{font-size:11px;padding:5px 10px;background:#eee8dc}.asset:nth-child(2) .pills span{background:#ffffff22}
+.invest-section{background:#eee8dc}.invest-layout{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}.invest-layout p{font-size:15px;color:#5c6771}.invest-card{background:var(--white);padding:32px;border-top:4px solid var(--coral)}.invest-card h3{font:600 29px "Songti SC",serif}.invest-card p{border-bottom:1px solid var(--line);padding:11px 0;margin:0;color:#536271}.invest-card b{color:var(--coral-dark);margin-right:8px}.fine{font-size:11px!important;color:#70808a!important;line-height:1.8}
+.case-grid,.founder-grid{display:grid;grid-template-columns:.88fr 1.12fr;gap:54px;align-items:center}.case{background:var(--white)}.portrait{position:relative;min-height:430px;overflow:hidden;background:#d9d0c4}.portrait img{width:100%;height:430px;object-fit:cover;display:block}.portrait .quote{position:absolute;left:20px;right:20px;bottom:0;padding:60px 18px 22px;background:linear-gradient(transparent,#102a43ed);font:600 29px/1.5 "Songti SC",serif;color:white}.ticks{list-style:none;padding:0;margin:19px 0}.ticks li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}.ticks li:before{content:"✓";color:var(--coral-dark);margin-right:10px}
+.founder-section{background:var(--paper)}.founder-grid{grid-template-columns:.82fr 1.18fr;align-items:start}.founder-visual img{display:block;width:100%;height:auto;max-height:540px;object-fit:cover}.founder-signature{font:600 30px "Songti SC",serif;margin-top:18px}.founder-visual p{font-size:13px;color:#5b636d}.founder-copy>p{font-size:15px}.experience article{border-top:1px solid var(--line);padding:18px 0}.experience article>small{color:var(--coral-dark);font-size:11px;letter-spacing:.05em}.experience h3{font-size:19px;color:var(--navy);margin:8px 0}.experience p{font-size:14px;color:#56636d;margin:0}.project-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}.project-tags span{background:var(--white);border:1px solid var(--line);font-size:11px;padding:4px 8px}.timeline{display:grid;gap:8px;margin-top:12px}.timeline p{font-size:13px;border-left:3px solid var(--coral);padding-left:13px;margin:0}.timeline strong{color:var(--navy);margin-right:8px}
+.offer{background:var(--navy);color:var(--white)}.offer h2{color:white}.offer-grid{display:grid;grid-template-columns:.96fr 1.04fr;gap:55px;align-items:start}.offer-intro{color:#d0dce3;font-size:16px}.offer-mini{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}.offer-mini span{padding:6px 9px;border:1px solid #ffffff50;font-size:12px}.pricecard{background:var(--white);color:var(--navy);padding:32px;border-top-right-radius:34px}.pricecard .price{font:600 64px Georgia,serif;letter-spacing:-.045em;border-bottom:1px solid var(--line);padding:9px 0 17px;margin-bottom:18px}.pricecard .price sup{font-size:23px}.included{list-style:none;padding:0;display:grid;gap:11px}.included li{font-size:13px;padding-left:18px;position:relative}.included li:before{content:"✓";position:absolute;left:0;color:var(--coral-dark)}
+.gift-section{background:#f2e4da}.gift-intro{max-width:830px;color:#59636d}.gift-art{display:block;width:100%;height:auto;border:1px solid #dcc6b2;margin:28px auto}.gift-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.gift-grid article{border-top:2px solid var(--coral);padding:18px 13px;background:#fff7f0}.gift-grid small{color:var(--coral-dark);font-weight:800;font-size:11px}.gift-grid h3{font:600 22px "Songti SC",serif;color:var(--navy)}.gift-grid p{font-size:13px}.gift-delivery{margin-top:25px;background:#fffaf6;padding:22px}.gift-delivery b{color:var(--navy)}.gift-terms{border-left:3px solid var(--coral);padding:15px 18px;margin-top:18px;background:#fffaf6;font-size:14px}
+.final-offer{background:#102a43;color:white;padding:55px 0}.final-grid{display:grid;grid-template-columns:1fr auto;gap:25px;align-items:center}.final-grid h2{color:white;font-size:38px}.final-grid .big{font:600 48px Georgia,serif;color:#f9bdb3}
+.diagnosis{background:var(--paper)}.diagnosis-box{display:grid;grid-template-columns:.8fr 1.2fr;gap:55px;padding:34px;background:var(--white);border:1px solid var(--line)}.fieldset{border:0;margin:0 0 23px;padding:0}.fieldset legend{font-weight:750;margin-bottom:11px}.options{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.options label{padding:12px;border:1px solid var(--line);font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;min-height:54px}.options label:has(input:checked){background:#f8dfd9;border-color:var(--coral)}input{accent-color:var(--coral-dark)}.result{display:none;background:#f4ede3;margin-top:18px;padding:17px;line-height:1.9;font-size:14px;border-left:3px solid var(--coral)}.result.visible{display:block}.result button{border:1px solid #bca59c;background:white;padding:9px 13px;cursor:pointer;margin-top:11px}
+.faq{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.faq details{border-top:1px solid var(--line);padding:10px 6px}.faq summary{font-size:15px;font-weight:700;cursor:pointer}.faq p{color:var(--gray);font-size:14px;margin-top:13px}.footer{background:#0c2033;color:#bac4cb;padding:35px 0}.footer p{margin:0;font-size:12px}
+@media(max-width:950px){.hero-grid{gap:24px}.navlinks{gap:11px}.aida{grid-template-columns:repeat(2,1fr)}.aida article:nth-child(2){border-right:0}.aida article:nth-child(-n+2){border-bottom:1px solid var(--line)}.gift-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:750px){.navlinks{display:none}.hero-grid,.case-grid,.founder-grid,.invest-layout,.offer-grid,.diagnosis-box{grid-template-columns:1fr}.hero{padding-top:45px}.hero-grid{gap:15px}.mock{max-width:430px;margin:auto}.section{padding:66px 0}.problem-grid,.flow-grid{grid-template-columns:1fr 1fr}.comparison{grid-template-columns:1fr}.versus{padding:1px}.assets{grid-template-columns:1fr}.case-grid,.founder-grid{gap:29px}.gift-grid{grid-template-columns:1fr 1fr}.final-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.wrap{width:calc(100% - 32px)}.brand{font-size:17px}.nav .btn{font-size:11px;padding:8px;min-height:38px}.hero h1{font-size:43px}.actions{flex-direction:column}.actions .btn{width:100%}.float{display:none}.mock{padding:15px}.problem-grid,.flow-grid,.aida,.gift-grid,.faq,.options{grid-template-columns:1fr}.aida article{border-right:0;border-bottom:1px solid var(--line)}.aida article:last-child{border-bottom:0}.compare{min-height:auto}.section{padding:57px 0}.head>p{font-size:14px}.offer-grid{gap:20px}.pricecard{padding:24px}.pricecard .price{font-size:53px}.hero-foot{flex-direction:column;align-items:flex-start;gap:7px}.final-grid .big{font-size:40px}.diagnosis-box{padding:20px}.portrait{min-height:330px}.portrait img{height:330px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+
+/* V5 editorial refinement — preserve warm white, navy and coral. No remote font dependency. */
+:root{--paper:#f8f5ee;--white:#fffefa;--navy:#102a43;--coral:#e55c50;--coral-dark:#bd453a;--serif:"Iowan Old Style","Noto Serif CJK SC","Songti SC","STSong",Georgia,serif}
+h1,h2,.serif,.brand,.hero-foot,.compare h3,.aida h3,.asset h3,.founder-signature,.impact-quote h3{font-family:var(--serif)}
+.hero h1{letter-spacing:-.055em;line-height:1.31;font-size:clamp(42px,5.05vw,69px)}
+.hero-benefit{font-size:clamp(23px,2.22vw,29px);letter-spacing:-.04em;line-height:1.66}
+.hero-desc{line-height:2.05;max-width:560px}
+.hero-note{max-width:570px}
+.hero-grid{grid-template-columns:1.07fr .93fr;gap:42px}
+.screen-cover h3{font:600 27px/1.48 var(--serif)}
+.screen-card{min-height:59px}
+.screen-card small{margin-top:2px}
+.head h2{line-height:1.46;font-size:clamp(32px,3.6vw,49px)}
+.compare.alive h3{color:#fff3ea;font-size:22px;line-height:1.65}
+.compare.alive p{color:#d5dfe5}
+.compare{border-radius:3px 30px 3px 3px;box-shadow:0 10px 40px #102a430c}
+.compare.alive{border-radius:3px 40px 3px 3px}
+.flow-grid.compact-flow{grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid #bfb4a7;border-bottom:1px solid #bfb4a7}
+.compact-flow article{border:0;border-right:1px solid #d2c5b6;background:transparent;padding:32px 27px}
+.compact-flow article:nth-child(2){background:#102a43;color:white}
+.compact-flow article:last-child{border:0}
+.compact-flow h3{font-size:20px;font-family:var(--serif);margin:14px 0}
+.compact-flow article small{color:var(--coral-dark);font-size:12px}
+.compact-flow article:nth-child(2) small{color:#f8c1b5}
+.impact-story{display:grid;grid-template-columns:1.15fr .85fr;gap:70px;align-items:center}
+.impact-story p{font-size:15px;line-height:2;color:#5c6771}
+.impact-quote{background:var(--white);padding:38px;border-top:3px solid var(--coral);border-radius:3px 32px 3px 3px}
+.impact-quote span{font-size:11px;font-weight:800;letter-spacing:.13em;color:var(--coral-dark)}
+.impact-quote h3{color:var(--navy);font-size:25px;margin:11px 0 24px;line-height:1.5}
+.impact-quote p{border-top:1px solid var(--line);padding-top:20px;font-size:13px;margin:0}
+.founder-signature{font-size:35px}
+.founder-copy>p{max-width:650px}
+.experience article{padding:22px 0}
+.experience article h3{line-height:1.6}
+.offer .pricecard{border-top:3px solid var(--coral)}
+.offer .included{gap:15px}
+.faq details{background:transparent}
+@media(max-width:900px){.hero-grid{gap:25px}.impact-story{gap:25px}}
+@media(max-width:750px){.hero-grid,.impact-story{grid-template-columns:1fr}.flow-grid.compact-flow{grid-template-columns:1fr}.compact-flow article{border-right:0;border-bottom:1px solid var(--line)}.compact-flow article:last-child{border-bottom:0}.impact-quote{padding:28px}}
+@media(max-width:520px){.hero h1{font-size:40px}.hero-benefit{font-size:23px}.impact-story{gap:20px}.compare.alive h3{font-size:21px}}
+
+/* V6: a cinematic reading journey, built on the supplied V5. */
+.hero{padding-top:64px;padding-bottom:0}.hero-foot{margin-top:52px;padding:23px 0}.hero h1{font-size:clamp(42px,4.7vw,65px)}.hero-benefit{margin-bottom:18px}.hero-desc{font-size:17px}.hero-note{line-height:1.9}.mock{padding-top:28px;padding-bottom:34px}.phone{transform:rotate(2deg)}
+.chapter-track{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 auto;background:var(--sand)}.chapter-track a{padding:20px 24px;border-right:1px solid var(--line);font-size:13px;display:flex;gap:15px;align-items:center}.chapter-track a:last-child{border:0}.chapter-track b{font:italic 26px Georgia,serif;color:var(--coral-dark)}.chapter-track small{display:block;color:var(--gray);font-size:10px;letter-spacing:.08em}.chapter-track a:hover{background:#fffefa}
+.problem-grid article{padding-right:25px}.statement{max-width:900px;font-size:28px}.section#person{padding-bottom:38px}.section#method{padding-top:45px}.aida{border:0;gap:12px}.aida article{position:relative;background:var(--white);border:1px solid var(--line)!important;border-top:4px solid var(--coral)!important;padding:27px 19px}.aida .letter{font-size:57px}.aida h3{font-size:24px}.aida .output{background:var(--paper);border-top:1px solid var(--line);margin:0 -5px -12px;padding:14px 10px}.aida .output strong{font-size:13px}.aida article:before{content:'● ● ●';letter-spacing:6px;position:absolute;right:14px;top:13px;color:#e9e1d6;font-size:7px}.aida p{line-height:1.95}.method-note{line-height:2;padding:22px 25px}
+.scene-bridge{padding:54px 0;background:var(--navy);color:var(--white);text-align:center}.scene-bridge small{font-size:10px;letter-spacing:.2em;color:#ffc2b8}.scene-bridge p{font:600 clamp(23px,3vw,35px)/1.7 var(--serif);margin:15px 0 5px}.scene-bridge span{font-size:13px;color:#bdcbd5}.asset{padding:35px 36px}.asset h3{font-size:32px}.asset .pills{padding-top:12px;border-top:1px solid #ddd5c9}.asset:nth-child(2) .pills{border-color:#ffffff28}.impact-quote{box-shadow:0 16px 40px #102a4308}
+.case{border-block:1px solid var(--line)}.portrait,.portrait img{min-height:500px;height:500px}.portrait img{object-position:center top}.founder-section{padding-top:105px}.founder-grid{gap:65px}.founder-visual{position:sticky;top:106px}.founder-visual img{border-radius:2px 50px 2px 2px}.founder-signature{margin-top:25px}.founder-opening{padding-left:21px;border-left:3px solid var(--coral);color:#586773;line-height:2}.experience article small{letter-spacing:.09em}.experience h3{font-family:var(--serif);font-size:23px;font-weight:600}.experience article:last-child{border-bottom:1px solid var(--line)}.project-tags span{border:0;background:var(--sand)}.pricecard{box-shadow:0 25px 70px #0002}.offer-cta{width:100%;margin-top:18px}.offer-mini{max-width:380px}.offer h2{line-height:1.5}
+.closing{background:var(--sand);padding:80px 0 70px;text-align:center}.closing h2{font-size:clamp(32px,4vw,49px)}.closing p{max-width:590px;margin:0 auto 25px;color:#62717b}.closing .btn{padding-inline:35px}.closing small{display:block;color:var(--gray);font-size:12px;margin-top:16px}.footer .wrap{display:flex;justify-content:space-between;gap:15px}.review-dialog{width:min(560px,calc(100% - 30px));border:1px solid var(--line);background:var(--white);padding:30px;color:var(--navy);border-radius:8px}.review-dialog::backdrop{background:#102a43b3}.review-dialog h2{font-size:28px;margin:0 0 12px}.review-dialog label{display:block;font-size:13px;margin:15px 0 6px}.review-dialog input,.review-dialog textarea,.review-dialog select{display:block;width:100%;padding:10px;border:1px solid #c9c3b8;background:white;border-radius:3px;font:inherit;font-size:14px;color:var(--navy)}.review-dialog textarea{resize:vertical;min-height:90px}.dialog-close{float:right;border:0;background:transparent;cursor:pointer;font-size:24px}.review-dialog .fine{margin-top:10px}.review-dialog .btn{margin-top:20px}.review-dialog output{display:block;font-size:13px;margin-top:10px}.preview-note{font-size:12px;color:var(--gray)}
+@media(max-width:950px){.aida article{border-bottom:1px solid var(--line)}.founder-grid{gap:30px}.chapter-track a{padding:18px 12px;gap:8px}}@media(max-width:750px){.chapter-track{grid-template-columns:1fr 1fr}.chapter-track a:nth-child(2){border-right:0}.chapter-track a:nth-child(-n+2){border-bottom:1px solid var(--line)}.founder-visual{position:static}.founder-visual img{max-height:620px;object-position:center top}.founder-section{padding-top:65px}.portrait,.portrait img{height:420px;min-height:420px}.hero-foot{margin-top:20px}.section#method{padding-top:25px}.footer .wrap{display:block}}@media(max-width:520px){.hero h1{font-size:40px}.hero-benefit{font-size:22px}.hero-desc{font-size:15px}.aida{gap:16px}.aida article{padding:23px}.aida .letter{font-size:49px}.aida p{margin-bottom:7px}.aida .output{margin:0}.statement{font-size:23px}.asset{padding:27px}.asset h3{font-size:28px}.review-dialog{padding:22px}.chapter-track a{font-size:12px}.chapter-track small{font-size:9px}.scene-bridge{padding:40px 12px}}
+
+/* Focused feedback revision: compact problems; preserve banner aspect ratio. */
+#problem{padding:58px 0}#problem .head{max-width:950px;margin-bottom:25px}#problem .head h2{font-size:clamp(29px,3.3vw,43px)}#problem .problem-grid{gap:0;border:1px solid #ffffff30}#problem .problem-grid article{padding:17px 21px;border:0;border-right:1px solid #ffffff25;border-bottom:1px solid #ffffff25}#problem .problem-grid article:nth-child(3n){border-right:0}#problem .problem-grid article:nth-last-child(-n+3){border-bottom:0}#problem .problem-grid h3{font-size:17px;margin:5px 0}#problem .problem-grid p{font-size:12px;margin:0}#problem .statement{font-size:24px;border:0;margin-top:19px;padding-top:5px}.case-grid{grid-template-columns:1.08fr 1fr;gap:40px}.portrait{height:auto;min-height:0;background:var(--navy);border-radius:4px;overflow:hidden;align-self:center}.portrait img{width:100%;height:auto;min-height:0;object-fit:contain;display:block}.portrait .quote{position:static;padding:23px 26px;background:var(--navy);font-size:26px;margin:0}.founder-copy .experience article:first-child{padding-top:0;border-top:0}.founder-section .eyebrow{margin-bottom:30px}.closing{padding:66px 0}.closing p{max-width:650px}
+@media(max-width:750px){.case-grid{grid-template-columns:1fr}.portrait{width:100%;max-width:650px;margin:auto}#problem .problem-grid{grid-template-columns:repeat(2,1fr)}#problem .problem-grid article:nth-child(n){border-right:1px solid #ffffff25;border-bottom:1px solid #ffffff25}#problem .problem-grid article:nth-child(2n){border-right:0}#problem .problem-grid article:nth-last-child(-n+2){border-bottom:0}}
+@media(max-width:520px){#problem .problem-grid article{padding:14px 12px}#problem .problem-grid h3{font-size:15px}#problem .problem-grid p{font-size:11px}#problem .statement{font-size:21px}.portrait .quote{font-size:23px}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in"><a class="brand" href="#top">会说话的营销小程序 / 网页<small>YOUR VALUE. A STORY WORTH ENTERING.</small></a><nav class="navlinks"><a href="#problem">转化误区</a><a href="#method">四幕电影方法论</a><a href="#assets">长期资产</a><a href="#cases">真实案例</a><a href="#service">服务与报价</a></nav><a class="btn primary" href="#service">了解方案 ↗</a></div></header>
+<main id="top">
+
+<section class="hero"><div class="wrap hero-grid">
+<div><div class="eyebrow">让你的商业价值，被真正理解</div><h1>会说话的<br/><span class="accent">营销小程序 / 网页</span></h1>
+<div class="hero-benefit">让客户被你吸引，喜欢你，信任你，<br/><span class="accent">主动靠近你。</span></div>
+<p class="hero-desc">让你的事业像一部引人入胜的四幕电影：从第一眼被吸引，到喜欢你、信任你的产品，再到发自内心地想继续了解你、与你合作。</p>
+<div class="actions"><a class="btn primary" href="#method">走进这部四幕商业电影 ↗</a><a class="btn outline" href="#cases">先看真实案例 →</a></div>
+<p class="hero-note">一套以内容建立信任、推动成交的营销转化系统。让关注走向喜欢，让信任走向愿意购买、加入或合作。</p>
+</div>
+<div aria-label="四幕商业电影在小程序中的展示示意" class="mock"><div class="float a">不只是产品介绍<br/><span class="muted">更是一段信任旅程</span></div>
+<div class="phone"><div class="notch"></div><div class="screen"><div class="screen-cover"><small>YOUR STORY · FOUR ACTS</small><h3>商业背后，<br/>是值得认识的人。</h3><p>让客户越了解你，越有理由选择你。</p></div>
+<div class="screen-list"><div class="screen-card"><b>第一幕｜吸引关注</b><small>这件事，和我有什么关系？</small></div><div class="screen-card"><b>第二幕｜认识并喜欢你</b><small>原来你有这样的经历与坚持</small></div><div class="screen-card"><b>第三幕｜相信价值</b><small>我理解它能怎样帮助我</small></div><div class="screen-card"><b>第四幕｜主动选择</b><small>我想了解、体验或进一步咨询</small></div><div class="screen-action">我想进一步了解 →</div></div></div></div><div class="float b">故事 · 使命 · 产品<br/>串成一条信任路径 ↗</div></div>
+</div><div class="wrap hero-foot"><b>PERSON FIRST</b><span>从认识一个人开始。商业背后，是一个值得认识的人。</span></div></section>
+
+<section class="section dark" id="problem"><div class="wrap"><div class="head"><div class="eyebrow">THE CONVERSION GAP / 转化误区</div><h2>为什么你的小程序和网站，<br/><span style="color:#ffc8bc">没能把关注变成生意？</span></h2><p>问题往往从第一屏就开始了：一直在讲产品，却没有建立起对人的信任。客户看见了“你卖什么”，却没有产生“我想选择你”的理由。</p></div><div class="problem-grid">
+<article><span>01 / 只讲产品</span><h3>没说到客户心里</h3><p>介绍你有什么，却没回应他在乎什么。</p></article>
+<article><span>02 / 只堆信息</span><h3>没有继续看的理由</h3><p>产品一页接一页，兴趣没有被点燃。</p></article>
+<article><span>03 / 看不到人</span><h3>信任无从建立</h3><p>不认识你的经历、坚持与做事方式。</p></article>
+<article><span>04 / 价值模糊</span><h3>选择只剩比价格</h3><p>看不懂差异，也找不到付费的理由。</p></article>
+<article><span>05 / 缺少认同</span><h3>看过，却没有被吸引</h3><p>信息记住了，却没有想参与的冲动。</p></article>
+<article><span>06 / 没有承接</span><h3>有兴趣，却没有下一步</h3><p>想购买、加入或合作，却不知道如何开始。</p></article></div><div class="statement">人是商业最难被复制的部分。<br/><em>让人建立信任，才能让产品拥有被选择的理由。</em></div></div></section>
+
+<section class="section" id="person"><div class="wrap"><div class="head center"><div class="eyebrow">PERSON FIRST / 把页面变活</div>
+<h2>当小程序像一部好电影，<br/><span class="accent">客户会想看到最后，更想成为故事的一部分。</span></h2>
+<p>想象一下，客户点开你的页面，看到自己的问题，认识一个有经历、有坚持的人，也逐渐明白：你的产品为什么值得了解。当认同与信任逐渐建立，客户才更愿意购买你的产品、加入你的事业，或与你合作。</p></div>
+<div class="comparison">
+<div class="compare"><small>产品货架型小程序 / 网页</small><div class="mini-list"><span>公司简介</span><span>产品 01 · 产品 02 · 产品 03</span><span>价格和促销</span><span>招商海报</span></div><h3>“好像和别人没有什么不同。”</h3><p>客户看到了很多信息，却很难认识你、记住你。</p></div>
+<div class="versus">VS</div>
+<div class="compare alive"><small>有生命的商业故事型小程序 / 网页</small><div class="mini-list"><span>第一幕：关注</span><span>第二幕：喜欢</span><span>第三幕：信任</span><span>第四幕：选择</span></div>
+<h3>“我喜欢这个人，也相信她做的事。我想购买她的产品，加入她的团队！”</h3><p>客户不只看到了产品，还看见了值得相信的人，以及与自己有关的价值。</p></div></div>
+<p class="motto"><b>不是展示更多产品，而是让客户产生更深的认同。</b><br/><span class="muted">让人带动产品，让信任推动成交。</span></p></div></section>
+
+
+<section class="section" id="method"><div class="wrap"><div class="head center"><div class="eyebrow">OUR METHOD / AIDA · 四幕商业电影</div>
+<h2>一场四幕商业电影，<br/><span class="accent">让客户从看见你，到愿意选择你。</span></h2>
+<p>把你的故事、使命、产品价值与客户关心的问题，沿着经典的 AIDA 营销路径编排成四幕。每一幕都让客户对你多一分了解、多一分认同，直到他愿意主动迈出下一步。</p></div>
+<div class="aida">
+<article><span class="letter">A</span><small>第一幕 / ATTENTION</small><h3>吸引关注</h3><p>从客户真正关心的问题切入。让他第一眼就停下来，想知道你的故事与他有什么关系。</p><div class="output"><strong>成品 01｜商业价值首页</strong>呈现你服务谁、带来什么价值，以及继续了解的入口。</div></article>
+<article><span class="letter">I</span><small>第二幕 / INTEREST</small><h3>认识并喜欢你</h3><p>走进你真实的人生经历、重要转折、事业使命。让客户从“知道你”，变成“愿意了解你”。</p><div class="output"><strong>成品 02｜人品合一创始人故事页</strong>把真实经历与价值观，讲成让人记得住的故事。</div></article>
+<article><span class="letter">D</span><small>第三幕 / DESIRE</small><h3>相信你的价值</h3><p>用客户听得懂的语言，讲清产品适合谁、解决什么问题，并以真实资料和案例支撑。</p><div class="output"><strong>成品 03｜产品价值展示页</strong>将已有产品信息、实际价值、真实案例和常见疑问组织得更清晰。</div></article>
+<article><span class="letter">A</span><small>第四幕 / ACTION</small><h3>主动举手选择</h3><p>客户已经了解你、认同价值，现在有一个自然的入口表达兴趣，进入进一步了解、咨询或体验。</p><div class="output"><strong>成品 04｜合作与咨询页</strong>通过轻问卷表达需求，开启进一步沟通或体验。</div></article>
+</div><p class="method-note"><strong>四幕，是客户逐渐走近你的过程；四个页面，是你真正拿到的成品。</strong>故事、使命、产品和客户问题彼此呼应，共同组成一套商业信任转化系统。</p></div></section>
+
+
+<section class="section flow-section" id="loop"><div class="wrap"><div class="head center"><div class="eyebrow">HOW IT WORKS / 一条链接，打开一个故事</div>
+<h2>把它分享出去，<br/><span class="accent">让你的故事自己说话。</span></h2>
+<p>它可以出现在朋友圈、社群、私聊，也可以作为你对外介绍业务的专属网页。客户点开链接，就能顺着故事认识你、理解产品价值，愿意时主动咨询。</p></div>
+<div class="flow-grid compact-flow"><article><small>01 / 分享</small><h3>朋友圈 · 社群 · 私聊</h3><p>把小程序或网页链接发给你想连接的人。</p></article>
+<article><small>02 / 认识与信任</small><h3>四幕故事替你表达</h3><p>一幕幕讲清人物、使命、价值和产品。</p></article>
+<article><small>03 / 主动举手</small><h3>客户选择继续了解</h3><p>通过咨询意向问卷，开启进一步沟通或体验。</p></article></div>
+<p class="flow-loop">一条链接，不再只是产品资料，而是一场可以被分享、被反复观看的商业介绍。</p></div></section>
+
+
+<section class="section" id="assets"><div class="wrap"><div class="head center"><div class="eyebrow">ONE INVESTMENT · TWO ASSETS</div>
+<h2>一次投资，<br/><span class="accent">获得两份可以长期使用的商业资产。</span></h2>
+<p>一份面向客户，让你的价值被看见；一份留给自己，让那些曾经只存在你脑海中的经历、判断与产品知识，成为可编辑、可复用的内容基础。</p></div>
+<div class="assets"><div class="asset"><small>ASSET 01 / 对外呈现</small><h3>一部会说话的<br/>四幕商业电影</h3><p>以小程序或网页展示，让客户沿着故事认识你、相信你的价值，并找到表达兴趣的入口。</p><div class="pills"><span>商业价值首页</span><span>创始人故事页</span><span>产品价值页</span><span>合作咨询页</span></div></div>
+<div class="asset"><small>ASSET 02 / 对内积累</small><h3>一份属于你的<br/>商业内容基础大脑</h3><p>把这次梳理出的创始人故事、使命、产品事实、客户问题与已有案例整理成可编辑的基础资料。未来可以作为创作新内容的原始材料，也能交给 AI 作为参考，让它更准确地理解你和你的业务。</p><div class="pills"><span>人物与使命</span><span>产品事实</span><span>客户问题</span><span>案例素材</span></div></div></div></div></section>
+
+
+<section class="section invest-section" id="investment"><div class="wrap impact-story"><div><div class="eyebrow">YOUR INFLUENCE CORE / 影响力资产的内核</div>
+<h2>你的价值，值得被完整看见。<br/><span class="accent">也值得成为长期使用的资产。</span></h2>
+<p>从客户第一次点开，到愿意咨询或付费，中间需要一套有次序的价值呈现：他要看懂你与自己的关系，认识你的坚持，理解产品的价值，也知道如何迈出下一步。</p>
+<p>我们把这条路径做进四个页面，也把支撑它的真实资料留给你。今天能拿来介绍业务，未来更新产品、拓展合作、使用 AI 创作时，依然有一份清楚的商业基础可用。</p></div>
+<div class="impact-quote"><span>今天</span><h3>一个会说话的小程序或网页</h3><span>以后</span><h3>持续可用的影响力资产原料</h3><p>经历与使命、产品事实、客户问题、已有案例，都保留在可编辑的资料里。业务在成长，这份资料也能继续积累。</p></div></div></section>
+
+<div class="scene-bridge"><div class="wrap"><small>THE STORY BECOMES REAL</small><p>“我被你做的事吸引，<br/>想购买你的产品，也想加入你的事业。”</p><span>这，是我们希望为客户创造的阅读体验。</span></div></div><section class="section case" id="cases"><div class="wrap case-grid"><div class="portrait"><img alt="宋星辉小程序首页视觉素材" loading="lazy" src="../talking-miniapp/assets/song-xinghui.jpg"/><div class="quote">我淋过雨，<br/>所以想给别人撑伞。</div></div><div><div class="eyebrow">REAL STORY / 真实案例</div><h2>被一个人吸引，<br/><span class="accent">想成为她事业的一部分。</span></h2><p>宋星辉的经历、事业选择与使命，是这场电影的起点。我们以潜在客户和合作伙伴关心的问题为线索，把她的转折、坚持与产品价值串在一起。希望客户一幕幕看下去，被她和她的事业深深吸引，进而愿意购买她的产品、加入她的团队。</p><ul class="ticks"><li>从潜在客户与创业伙伴的困惑切入</li><li>用真实经历与关键转折建立信任</li><li>让商业项目在故事中自然呈现</li><li>让购买、加入与合作有清晰的下一步</li></ul><a class="btn primary" href="https://qingshijiu-story-v2-20261017.jasminwang-site.pages.dev/qingshijiu/" rel="noopener noreferrer" target="_blank">查看宋星辉小程序首页 ↗</a></div></div></section>
+
+<section class="section founder-section" id="expertise"><div class="wrap"><div class="eyebrow">THE PERSON BEHIND THE METHOD / 认识澳洲茉莉</div>
+<div class="founder-grid"><div class="founder-visual"><img alt="澳洲茉莉人物形象照" loading="lazy" src="../talking-miniapp/assets/jasmin-portrait-current.png"/><div class="founder-signature">澳洲茉莉 <span style="font:13px sans-serif;color:#65717a">Jasmin Wang</span></div><p>跨国经营者 × AI 影响力资产策划人 × 行业平台创始人</p></div>
+<div class="founder-copy">
+<div class="experience">
+<article><small>01 / 企业经营与跨国商业经验</small><h3>18岁成为家族企业法人，20余年跨国商业与财务经历</h3><p>从北京家族企业的经营决策，到澳洲 CPA、墨尔本大学高级财务岗位，既经历过传统企业经营，也有跨国财务、商业分析与团队管理的实务基础。</p></article>
+<article><small>02 / 实体商业转型</small><h3>策划并主导近30年家居商业平台的转型升级</h3><p>2023年起接手天大国际家居，带领百余位传统商户探索 AI 辅助获客、短视频内容、私域经营及实体商业新模式。</p></article>
+<article><small>03 / 多行业战略发售策划</small><h3>策划并主导从0到1的项目定位、招商与发售</h3><p>项目涵盖经销商及实体企业赋能、线上私域发售、线下招商、高客单产品设计与品牌转型。</p><div class="project-tags"><span>老韩 AI+云连锁经销商项目</span><span>妙姐白酒生态 IP 项目</span><span>北京天地市场商学院</span><span>张机长航空经济项目</span><span>羊坝主餐饮轻改招商</span><span>实体赋能 V 计划</span></div></article>
+<article><small>04 / IP 与商业平台打造</small><h3>从成长平台，到实体生态与澳洲华人影响力平台</h3>
+<div class="timeline"><p><strong>2020</strong> 将国际《生命之书》体系带入中国，创建生命之书万人成长平台。</p><p><strong>2023–2024</strong> 创立天大数字生态，推动传统商业升级，赋能上千名经销商转型。</p><p><strong>2025</strong> 创立天大新商业联盟，推动品牌轻改与项目共创。</p><p><strong>2026 · 8月</strong> 启动澳洲无界华人影响力共创平台。</p></div></article>
+</div></div></div></div></section>
+
+
+<section class="section offer" id="service"><div class="wrap offer-grid"><div><div class="eyebrow" style="color:#ffc7bb">THE OFFER / 会说话的营销转化系统</div><h2>让客户被你吸引，<br/><span style="color:#ffc2b8">愿意为你的价值付费。</span></h2>
+<p class="offer-intro">一次商业梳理，把故事、使命、产品与客户问题串起来。交给你四个成品页面，以及一份可持续使用的结构化商业基础资料。让这场四幕电影成为你的营销转化工具：吸引对的人、建立信任，引导他走向购买、加入或合作。</p>
+<div class="offer-mini"><span>人物与业务梳理</span><span>四幕页面内容</span><span>咨询意向问卷</span><span>可编辑商业基础资料</span><span>两轮集中修改</span></div></div>
+<div class="pricecard"><small>会说话的营销小程序 / 网页｜标准内容服务</small><div class="price"><sup>¥</sup>29,800</div>
+<ul class="included"><li>一次商业人物与业务价值梳理：真实经历、使命、产品、客户问题</li><li>成品 01｜商业价值首页</li><li>成品 02｜人品合一创始人故事页</li><li>成品 03｜产品价值展示页：产品价值、案例与常见疑问</li><li>成品 04｜合作与咨询页：轻问卷内容与展示入口</li><li>一份可编辑的商业基础资料：人物、产品事实、客户问题与案例素材，便于长期复用或作为 AI 的参考输入</li><li>适用于移动端的小程序／网页内容呈现、两轮集中内容修改</li></ul>
+<p class="fine">¥29,800 为内容梳理、策划与页面呈现服务。<strong>技术授权及额外功能开发另计。</strong>不含短视频／直播成品、AI 系统开发、发售策划或代运营。</p>
+</div></div></section>
+
+<section class="section" id="faq"><div class="wrap"><div class="head"><div class="eyebrow">FAQ / 常见问题</div><h2>你可能还想了解。</h2></div><div class="faq">
+<details><summary>已经有小程序或网站了，还需要重新购买吗？</summary><p>不一定。我们提供的是独立的内容梳理和页面呈现服务。如果现有技术平台可用，可以在原平台承载新内容；涉及技术开发和授权的部分另行确定。</p></details>
+<details><summary>没有完整故事，还能做吗？</summary><p>可以。我们根据你提供的真实资料，通过访谈梳理关键经历、使命与价值。不会凭空编造人物故事、客户案例和业绩。</p></details>
+<details><summary>产品价值的内容从哪里来？</summary><p>基于你提供的现有产品、实际服务、客户问题和可使用的真实案例，重新组织为客户容易理解的表达。服务不包含新产品研发或未经证实的效果承诺。</p></details>
+<details><summary>为什么说它是一份长期资产？</summary><p>网页中的人物故事、使命、产品事实及客户问题，也会形成可编辑的商业基础资料。这些素材未来可用于朋友圈、视频、直播等内容创作，也可以作为 AI 理解你和业务的参考材料；不代表已交付这些后续成品或 AI 系统。</p></details>
+<details><summary>多久能完成？包含修改吗？</summary><p>对于资料齐备、范围明确的标准项目，内容交付预计7–10个工作日，包含两轮集中修改；具体排期与技术对接依双方约定为准。</p></details>
+</div></div></section>
+
+<section class="closing" id="consult"><div class="wrap"><div class="eyebrow">YOUR NEXT CHAPTER</div><h2>让你的页面，<br/><span class="accent">成为吸引客户的商业磁场。</span></h2><p>用真实的你吸引对的人，用产品价值让信任有依据。让客户发自内心地想购买、想加入、想与你合作。</p><a class="btn primary" href="#service">查看服务内容与投资 ↗</a><small>一次商业梳理 · 四个成品页面 · 两份长期资产</small></div></section></main>
+<footer class="footer"><div class="wrap"><p>© 2026 会说话的营销小程序 / 网页 · 商业信任内容系统</p><p>真实内容 · 清晰价值 · 长期信任</p></div></footer>
+
+</body>
+</html>
