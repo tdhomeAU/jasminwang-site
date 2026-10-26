@@ -132,7 +132,7 @@ function setPage(page,anchor){
  document.querySelectorAll('[data-page]').forEach(b=>{b.classList.toggle('active',b.dataset.page===page);b.setAttribute('aria-current',b.dataset.page===page?'page':'false')});
  modePanel.hidden=page!=='store';
  if(!pages[page])pages[page]=decode64(html64[page]);
- stage.onload=()=>{if(page==='home')installXinghuiCarousel();if(page==='store')stage.contentWindow?.q9SetStoreMode?.(storeMode);if(page==='group'&&anchor==='products'){stage.contentWindow?.document?.getElementById('products')?.scrollIntoView?.({block:'start'})}};
+ stage.onload=()=>{if(page==='home'){installXinghuiCarousel();const doc=stage.contentDocument,hero=doc?.querySelector('.q9-home-hero'),photo=doc?.querySelector('.v5-photo>img');if(hero&&photo){hero.style.backgroundImage='linear-gradient(180deg,rgba(16,7,5,.74),rgba(24,11,9,.72)),url('+photo.src+')';hero.style.backgroundPosition='center 30%';hero.style.backgroundSize='cover';hero.style.borderBottom='1px solid #a17b43';}}if(page==='productstory'){const doc=stage.contentDocument,all=doc?.querySelectorAll('main .editorial-image img');if(all&&all.length>1){all[0].src=all[1].src;all[0].alt='轻拾玖高科美真实产品护理资料';}}if(page==='store')stage.contentWindow?.q9SetStoreMode?.(storeMode);if(page==='group'&&anchor==='products'){stage.contentWindow?.document?.getElementById('products')?.scrollIntoView?.({block:'start'})}};
  stage.srcdoc=pages[page].replace(/__ASSET_(\d+)__/g,(_,i)=>Q5_ASSETS[+i]||'');
  history.replaceState(null,'','#'+page);
 }
