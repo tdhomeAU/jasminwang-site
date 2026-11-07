@@ -14,6 +14,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
         run: |
+          sleep 20
           python3 - <<'PY'
           import urllib.request, urllib.error, json
           roots=["https://jasminwang.com","https://jasminwang-site.pages.dev"]
