@@ -24,6 +24,7 @@ export async function onRequestPost({ request, env }) {
     const host=new URL(request.url).origin;
     if(origin && origin!==host) return Response.json({error:'跨域请求不允许'},{status:403});
     if(!env.OPENAI_API_KEY) return Response.json({error:'AI 服务尚未配置：请在 Cloudflare Pages 中设置 OPENAI_API_KEY。演示内容不代表真实 AI 生成。',code:'NOT_CONFIGURED'},{status:503});
+    const apiKey=String(env.OPENAI_API_KEY||'').trim().replace(/^Bearer\s+/i,'').replace(/^["']|["']$/g,'');
     const data=await request.json();
     const raw=String(data.raw||'').trim().slice(0,3500);
     if(raw.length<12) return Response.json({error:'请至少说一两句真实发生的事情（不少于12字）'},{status:400});
@@ -36,7 +37,7 @@ export async function onRequestPost({ request, env }) {
     const prompt=JSON.stringify({raw,mode,style,task,taskTitle,angle,previous,context:'输入是未经核实的真实口述，重写时须清理病句、保留事实、不自动承诺效果收益；历史稿仅用于避免重复。'});
     const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),22000);
     let ai;
-    try{ai=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-4.1-mini',temperature:0.75,response_format:{type:'json_object'},messages:[{role:'system',content:SYSTEM},{role:'user',content:prompt}]}),signal:controller.signal});}finally{clearTimeout(timeout);}
+    try{ai=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-4.1-mini',temperature:0.75,response_format:{type:'json_object'},messages:[{role:'system',content:SYSTEM},{role:'user',content:prompt}]}),signal:controller.signal});}finally{clearTimeout(timeout);}
     if(!ai.ok) {
       // Report only provider status/code/type: never log or echo credentials, user input, or raw upstream text.
       let provider={};try{provider=await ai.json()}catch{}
@@ -48,7 +49,7 @@ export async function onRequestPost({ request, env }) {
       else if(ai.status===403) message='OpenAI 项目权限不足，请检查 API 项目和模型访问权限。';
       else if(ai.status===429 || upstreamCode==='insufficient_quota') message='OpenAI API 已触发额度或速率限制，请检查账户 API 余额及用量。';
       else if(ai.status===400 || ai.status===404) message='AI 模型请求或模型名称未被接受，请检查模型配置。';
-      return Response.json({error:message,code:'UPSTREAM_ERROR',upstream_status:ai.status,upstream_code:upstreamCode,upstream_type:upstreamType},{status:502,headers:{'Cache-Control':'no-store'}});
+      return Response.json({error:message,code:'UPSTREAM_ERROR',upstream_status:ai.status,upstream_code:upstreamCode,upstream_type:upstreamType},{status:424,headers:{'Cache-Control':'no-store'}});
     }
     const body=await ai.json();let output;
     try{output=JSON.parse(body.choices[0].message.content);}catch{return Response.json({error:'AI 返回格式错误，请重试'},{status:502});}
