@@ -43,4 +43,4 @@ $('openAdmin').onclick=()=>{$('dealer').style.display='none';$('admin').classLis
 $('back').onclick=()=>{$('admin').classList.remove('show');$('dealer').style.display='block';render()};$('save').onclick=()=>{state.moments=+$('momentsTarget').value;state.videos=+$('videoTarget').value;persist();message('今日目标已更新');$('back').click()};$('reset').onclick=()=>{if(confirm('重置今天的演示进度？')){data.done=[];persist();$('back').click()}};$('export').onclick=()=>{const text=state.records.map(x=>x.day+' | '+x.task+'\n'+x.text).join('\n\n');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='轻拾玖经营记录.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
 render();
 })();
-</script></body></html>
+</script><script src="./real-ai.js" defer></script></body></html>
