@@ -99,6 +99,7 @@
   const mark=$('markDone');
   if(mark){const old=mark.onclick;mark.onclick=function(e){
     if(!valid()){status('请先生成当前内容并自行发布。',true);return}
+    if(typeof window.qsjSaveAiDraft==='function') window.qsjSaveAiDraft(field.value.trim(),activeDraft.content);
     old?.call(mark,e);activeDraft=null;checks.textContent='';
   }}
 })();
