@@ -37,7 +37,19 @@ export async function onRequestPost({ request, env }) {
     const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),22000);
     let ai;
     try{ai=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-4.1-mini',temperature:0.75,response_format:{type:'json_object'},messages:[{role:'system',content:SYSTEM},{role:'user',content:prompt}]}),signal:controller.signal});}finally{clearTimeout(timeout);}
-    if(!ai.ok) return Response.json({error:'AI 服务暂时不可用，请检查模型权限和后台日志',code:'UPSTREAM_ERROR'},{status:502});
+    if(!ai.ok) {
+      // Report only provider status/code/type: never log or echo credentials, user input, or raw upstream text.
+      let provider={};try{provider=await ai.json()}catch{}
+      const clean=v=>String(v||'').slice(0,64).replace(/[^a-zA-Z0-9_.-]/g,'');
+      const upstreamCode=clean(provider?.error?.code);
+      const upstreamType=clean(provider?.error?.type);
+      let message='AI 模型暂时不可用，请稍后重试。';
+      if(ai.status===401) message='OpenAI 密钥没有通过认证，请检查密钥是否为有效的 OpenAI API Key。';
+      else if(ai.status===403) message='OpenAI 项目权限不足，请检查 API 项目和模型访问权限。';
+      else if(ai.status===429 || upstreamCode==='insufficient_quota') message='OpenAI API 已触发额度或速率限制，请检查账户 API 余额及用量。';
+      else if(ai.status===400 || ai.status===404) message='AI 模型请求或模型名称未被接受，请检查模型配置。';
+      return Response.json({error:message,code:'UPSTREAM_ERROR',upstream_status:ai.status,upstream_code:upstreamCode,upstream_type:upstreamType},{status:502,headers:{'Cache-Control':'no-store'}});
+    }
     const body=await ai.json();let output;
     try{output=JSON.parse(body.choices[0].message.content);}catch{return Response.json({error:'AI 返回格式错误，请重试'},{status:502});}
     if(!output.content||typeof output.content!=='string')return Response.json({error:'AI 未返回有效文案，请重试'},{status:502});
