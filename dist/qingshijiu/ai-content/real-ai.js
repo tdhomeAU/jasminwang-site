@@ -64,8 +64,16 @@
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({raw,mode,style:'自然',task:taskKind(current),taskTitle:current,angle,previous:rewrite?previous:''})
       });
-      let body={};try{body=await response.json()}catch{throw new Error('接口没有返回有效JSON，请检查部署')}
-      if(!response.ok)throw new Error(body.error||'AI调用失败（HTTP '+response.status+'）');
+      const responseText=await response.text();
+      let body={};try{body=JSON.parse(responseText)}catch{
+        throw new Error(response.status>=500
+          ? '后台网关返回 HTTP '+response.status+'，没有收到 AI JSON 响应。请检查 Cloudflare Pages Functions 部署与日志。'
+          : '接口返回了非 JSON 内容（HTTP '+response.status+'），请检查接口路由。');
+      }
+      if(!response.ok){
+        const extra=body.upstream_status?'（OpenAI HTTP '+body.upstream_status+(body.upstream_code?' / '+body.upstream_code:'')+'）':'';
+        throw new Error((body.error||'AI调用失败（HTTP '+response.status+'）')+extra);
+      }
       if(body.mode!=='live'||typeof body.result?.content!=='string'||!body.result.content.trim())throw new Error('接口没有返回真正的AI文案');
       if(n!==requestNo)return;
       if(cacheKey(mode)!==key){status('输入已发生变化，请点击重新生成。',true);return}
