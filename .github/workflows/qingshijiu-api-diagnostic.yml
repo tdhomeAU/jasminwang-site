@@ -14,10 +14,9 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
         run: |
-          sleep 25
           python3 - <<'PY'
           import urllib.request, urllib.error, json
-          roots=["https://jasminwang.com","https://30de0673.jasminwang-site.pages.dev"]
+          roots=["https://jasminwang.com","https://jasminwang-site.pages.dev"]
           payload=json.dumps({"raw":"今天我参加了一场团队培训，和朋友讨论了怎样认真服务客户，对方说最重视清楚透明的体验流程。","mode":"moments","style":"自然"},ensure_ascii=False).encode("utf-8")
           for root in roots:
             for method in ["GET","POST"]:
