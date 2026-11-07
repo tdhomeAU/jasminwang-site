@@ -31,17 +31,48 @@ function totals(){return state.moments+state.videos}function isVideo(i){return i
 function message(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(window.timer);window.timer=setTimeout(()=>e.style.display='none',2000)}
 function render(){const total=totals(),done=data.done.filter(i=>i<total).length;$('todayText').textContent=today.toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'})+' · 今日任务';$('countText').textContent=done+' / '+total+' 已完成';$('progressFill').style.width=total?100*done/total+'%':'0%';if(done===total){$('work').innerHTML='<div class="completed"><b>✓</b><h2>今天都完成啦！</h2><p>明天继续，让更多人看到你。</p></div>';$('taskList').innerHTML='';return}if(data.done.includes(selected)||selected>=total){selected=Array.from({length:total},(_,i)=>i).find(i=>!data.done.includes(i))||0}
 const t=task(selected);$('taskTag').textContent='第 '+(selected+1)+' 项 · '+(isVideo(selected)?'短视频':'朋友圈');$('taskTitle').textContent=t.title;$('taskHelp').textContent=t.help;$('story').value=data.notes[selected]||'';$('story').placeholder='例如：'+t.example;$('result').classList.remove('show');$('video').classList.remove('show');$('taskList').innerHTML=Array.from({length:total},(_,i)=>{const item=task(i),done=data.done.includes(i);return '<button class="task '+(done?'done ':'')+(selected===i?'active':'')+'" data-i="'+i+'"><span class="num">'+(done?'✓':i+1)+'</span><span class="label">'+item.title+'</span><small>'+(done?'已完成':'待完成')+'</small></button>'}).join('');document.querySelectorAll('[data-i]').forEach(x=>x.onclick=()=>{const i=+x.dataset.i;if(data.done.includes(i))return message('这条已经完成啦');selected=i;render()})}
-function create(){const t=task(selected),raw=$('story').value.trim();data.notes[selected]=raw;state.records.push({day:day,task:t.title,text:raw,time:new Date().toISOString()});persist();const fact=raw||'今天想聊一个'+(t.kind==='video'?'客户体验':'做生意')+'的话题';const hooks={beauty:['今天分享一个真实的变美小故事。','你有没有发现，很多人最在意的不是年龄，而是自己的状态？','每个人都有自己最在意的面部小细节。'],business:['做生意，找到适合自己的方式很重要。','很多人问我，做美业是不是一定要先开店？','做一份事业，不只是努力，更要选对适合自己的做法。'],life:['忙归忙，也要给生活留点时间。','最近的一件小事，让我有了新的感触。','有时候，生活里的小事更让人开心。'],video:['这组真实照片，让我想跟你讲一个故事。','你最近有在意的面部小变化吗？','今天用十几秒分享一段真实经历。'],product:['关于一分钟变美体验，大家最想问什么？','今天聊聊很多姐妹关心的体验问题。','不一定要急着决定，先了解清楚再说。'],brand:['今天团队又有新消息啦。','有些成长，是跟一群人一起发生的。','今天分享一件我们团队的小事。']}[t.kind];const opening=hooks[style%3];const detail=raw?fact.replace(/[。！？!]+$/,'')+'。':'先了解清楚产品、体验方式和自己的需要，再决定是否进一步咨询。';const mid=t.kind==='business'?'轻拾玖一直在探索“平台做重，个人做轻”的事业方式，我也还在一步步学习。':t.kind==='beauty'||t.kind==='video'?'有真实的人、有自己的故事，分享起来才更有感觉。':t.kind==='brand'?'能和伙伴一起交流学习，也是一件挺有意思的事。':t.kind==='product'?'把问题说清楚，才方便每个人作出自己的选择。':'日子里的这些细节，也值得好好记录。';out={social:opening+'\n\n'+detail+'\n\n'+mid+'\n\n'+t.cta,v15:'【开头 0-3秒】'+opening+'\n【画面 3-11秒】'+t.media+'\n【说一句话】'+detail+'\n【结尾】'+t.cta,v30:'【前5秒】'+opening+'\n\n【真实故事】'+detail+'\n\n【补一组画面】'+t.media+'\n\n【我的感受】'+mid+'\n\n【最后5秒】'+t.cta};
-$('mediaTip').textContent='建议配图/视频：'+t.media+'。素材在微信发布时自己添加。';$('result').classList.add('show');setFormat(isVideo(selected)?'v15':'social');$('result').scrollIntoView({behavior:'smooth',block:'nearest'})}
+async function create(){
+  const t=task(selected), raw=$('story').value.trim();
+  if(raw.length<12){message('请先说一两句真实发生的事，至少12个字');return}
+  data.notes[selected]=raw;persist();
+  const make=$('make'),rewrite=$('rewrite');make.disabled=true;rewrite.disabled=true;
+  make.textContent='正在整理真实素材…';
+  try{
+    const modes=[['social','moments'],['v15','video15'],['v30','video30']];
+    const generated=await Promise.all(modes.map(async ([key,mode])=>{
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),28000);
+      try{
+        const response=await fetch('/api/qingshijiu-generate',{
+          method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,
+          body:JSON.stringify({raw,mode,style:['自然','故事感','专业','温暖'][style%4],angle:t.title})
+        });
+        const data=await response.json();
+        if(!response.ok||!data.result?.content)throw new Error(data.error||'AI 暂时不可用，请稍后重试');
+        return [key,data.result];
+      }finally{clearTimeout(timer)}
+    }));
+    out=Object.fromEntries(generated.map(([key,result])=>[key,result.content]));
+    const info=generated[0][1];
+    $('mediaTip').textContent='配图建议：'+(info.imageTip||t.media)+(info.checks?.length?'\n发布前请确认：'+info.checks.join('；'):'');
+    state.records.push({day,task:t.title,text:raw,time:new Date().toISOString()});persist();
+    $('result').classList.add('show');setFormat(isVideo(selected)?'v15':'social');
+    $('result').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(error){
+    out={};
+    const reason=error.name==='AbortError'?'生成超时，请重试':error.message;
+    $('result').classList.add('show');$('output').textContent='暂时无法生成：'+reason;
+    $('mediaTip').textContent='未生成文案，原始输入已保留。';
+    message(reason);
+  }finally{make.disabled=false;rewrite.disabled=false;make.textContent='✦ 帮我写好'}
+}
 function setFormat(f){fmt=f;document.querySelectorAll('[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f===f));$('output').textContent=out[f]||'';$('video').classList.toggle('show',f!=='social')}
 function fallbackCopy(s){const i=document.createElement('textarea');i.value=s;document.body.appendChild(i);i.select();try{document.execCommand('copy');message('复制好了，回微信就能用')}catch(e){message('长按文字复制')}i.remove()}
 function copy(s){if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(s).then(()=>message('复制好了，回微信就能用')).catch(()=>fallbackCopy(s));else fallbackCopy(s)}
-$('make').onclick=()=>message('AI 服务未加载，请检查连接，不能使用旧版拼接。');$('swap').onclick=()=>{data.swaps[selected]=(data.swaps[selected]||0)+1;persist();render();message('换了一个分享题目')};$('rewrite').onclick=()=>message('AI 服务未加载，请检查连接。');$('copy').onclick=()=>copy(out[fmt]||'');$('markDone').onclick=()=>{data.done.push(selected);persist();message('记录好了，继续做下一条');render();window.scrollTo({top:0,behavior:'smooth'})};document.querySelectorAll('[data-f]').forEach(x=>x.onclick=()=>setFormat(x.dataset.f));
+$('make').onclick=create;$('swap').onclick=()=>{data.swaps[selected]=(data.swaps[selected]||0)+1;persist();render();message('换了一个分享题目')};$('rewrite').onclick=()=>{style++;create()};$('copy').onclick=()=>copy(out[fmt]||'');$('markDone').onclick=()=>{data.done.push(selected);persist();message('记录好了，继续做下一条');render();window.scrollTo({top:0,behavior:'smooth'})};document.querySelectorAll('[data-f]').forEach(x=>x.onclick=()=>setFormat(x.dataset.f));
 $('recordMode').onclick=()=>switchMode(false);$('avatarMode').onclick=()=>switchMode(true);function switchMode(v){avatar=v;$('recordMode').classList.toggle('on',!v);$('avatarMode').classList.toggle('on',v);$('videoHelp').textContent=v?'数字人入口已预留：接入服务商后，可用当前口播稿生成视频。当前先复制制作任务。':'复制口播稿，手机照着念就行。';$('videoAction').textContent=v?'复制数字人制作任务':'复制视频口播稿'}$('videoAction').onclick=()=>{const script=out[fmt==='v30'?'v30':'v15'];if(!script)return;copy(avatar?'【轻拾玖数字人制作任务｜等待接口接通】\n'+script:script)};
 $('voice').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return message('浏览器不支持语音，请直接打字');let r=new SR();r.lang='zh-CN';r.interimResults=false;r.onresult=e=>{$('story').value=($('story').value+' '+e.results[0][0].transcript).trim()};r.onerror=()=>message('没听清，请再试或直接打字');try{r.start();message('正在听你说话')}catch(e){message('语音启动失败，请直接打字')}};
 $('openAdmin').onclick=()=>{$('dealer').style.display='none';$('admin').classList.add('show');$('momentsTarget').value=state.moments;$('videoTarget').value=state.videos;$('records').textContent=state.records.slice(-20).reverse().map(n=>n.day+' · '+n.task+'\n'+n.text).join('\n\n')||'暂无记录'};
 $('back').onclick=()=>{$('admin').classList.remove('show');$('dealer').style.display='block';render()};$('save').onclick=()=>{state.moments=+$('momentsTarget').value;state.videos=+$('videoTarget').value;persist();message('今日目标已更新');$('back').click()};$('reset').onclick=()=>{if(confirm('重置今天的演示进度？')){data.done=[];persist();$('back').click()}};$('export').onclick=()=>{const text=state.records.map(x=>x.day+' | '+x.task+'\n'+x.text).join('\n\n');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='轻拾玖经营记录.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-window.qsjSaveAiDraft=function(raw,content){data.notes[selected]=raw;state.records.push({day,task:task(selected).title,text:content,source:raw,time:new Date().toISOString()});persist();};
 render();
 })();
-</script><script src="./real-ai.js" defer></script></body></html>
+</script></body></html>
