@@ -12,7 +12,7 @@
   const info=document.createElement('div');
   info.id='qsjAiStatus';info.setAttribute('role','status');
   info.style.cssText='font-size:12px;line-height:1.65;color:#e4c99b;margin:9px 2px;min-height:1.4em;white-space:pre-wrap';
-  info.textContent='内容由 AI 生成，发布前请核实事实与图片授权。';
+  info.textContent='输入将发送到 AI 服务生成草稿；请隐去客户姓名等隐私，发布前核对事实与授权。';
   btn.insertAdjacentElement('afterend',info);
   const checks=document.createElement('div');
   checks.id='qsjAiChecks';
