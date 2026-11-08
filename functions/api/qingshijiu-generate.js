@@ -8,6 +8,7 @@
 // Song Xinghui oral narrative: https://docs.google.com/document/d/12STiEhruZP5aevt9Df7v2rg_Y2SS6OmpkwLIvwJ2S6Q/edit
 // Product/Skill implementation decisions: https://docs.google.com/document/d/1dt7RgLP4gq2OPz4R1-0XcBI09-PVTnuAAVkY79vJRPE/edit
 import {retrieveQingshijiuBrain, BRAIN_VERSION} from '../../src/qingshijiu-brain/brain.js';
+import {findEvergreenTopic} from '../../src/qingshijiu-brain/evergreen-topics.js';
 const KNOWLEDGE_VERSION=BRAIN_VERSION;
 const SKILLS = {
   F01:{name:'部位困扰切片',method:'从用户明确提到的一处困扰和客户的真实反应切入→把这件事讲具体→轻咨询；用户已有的变化反馈如实用个人感受方式表达，不自造疗效或照片细节。',needs:'真实问题、发生场景或感受'},
@@ -41,6 +42,7 @@ const SYSTEM = `你是轻拾玖 AI销冠的资深微信朋友圈文案编辑和�
 【工作分工】轻拾玖及经销商自行决定哪些图片、客户反馈和文字可使用；你是营销编辑，不是审核官。用户提供的照片、案例、反馈和故事视为本次创作素材。不要替她决定不配图、不发布，不要在任何成品、配图建议或标题里说“本人授权、隐私、风险、合规、待核实、未经证实、效果不保证、不可发、先不发、要审核”等提醒。不要自作主张把文案变成建议用户“别发照片”的教育文章。
 【事实边界｜内部执行】保留用户明确给出的年龄、客户感受、真实变化与故事，不擅自弱化/删光。用户称“客户觉得”“自己看着变化”时写成客户个人感受或所见，不升级成所有人必然有效；也不虚构医学诊断、治疗承诺、人人收益、回本保证、未给出的数字/对话/动作。不要凭一张对比图凭空写照片里的细节；但既然用户说有照片，就可以在配图建议里说“搭配那组照片”，不需询问使用权限。
 【先理解，再创作】后台这次会给你“两层 Brain 的检索结果”：1) 总部品牌 Brain 的可追溯事实/主题卡；2) 宋星辉与经销商录屏观察提炼的营销结构卡（非已验证成交成果）。用当前客户原话作唯一人物事实源，借鉴结构不借用他人经历、截图、效果、业绩、具体天数和原文。只选与当前题目有关的资料，不要在成品里生硬讲品牌知识库、样本编号、公式或者技能。
+【常青选题模式】当 evergreenTopic 有值，代表用户只选择了一个可长期讨论的话题，并没有提供本人或客户的新经历。请直接写有趣的文化知识、审美观察、观点或适合熟人讨论的问题，不要虚构“今天我遇到一位客户”“昨天有个姐姐告诉我”或自己亲历；不要编发照片与案例。传统面相/脸部风水作为文化和观察切口，绝不宣称鼻子决定财富、额头决定运势、外貌反映人品；也不必把这些后台提醒写进文案。结尾可自然留一个讨论问题，而非硬推广产品。
 【去AI味｜互联网口播语言引擎＋高级嘴替的通用人味规则】
 1. 开头直接用素材里最具体的人、事、困扰、惊喜或小反差；不写“今天整理到一位客户的情况”“在这个快节奏时代”“你有没有发现”“很多时候/其实/说到底”等万能开头。
 2. 像一个真实做生意的人给微信朋友说话，不像品牌宣传册、培训讲师或客服。可以短句、停顿、轻微口语，但不故意撒娇、不夸张喊麦。
@@ -61,17 +63,20 @@ export async function onRequestPost({ request, env }) {
     const apiKey=String(env.DEEPSEEK_API_KEY||'').trim().replace(/^Bearer\s+/i,'').replace(/^["']|["']$/g,'');
     const data=await request.json();
     const raw=String(data.raw||'').trim().slice(0,3500);
-    if(raw.length<12) return Response.json({error:'请至少说一两句真实发生的事情（不少于12字）'},{status:400});
+    const topic=findEvergreenTopic(String(data.evergreenTopicId||'').slice(0,40));
+    if(raw.length<12 && !topic) return Response.json({error:'请至少说一两句真实发生的事情（不少于12字），或选择一个常青选题。'},{status:400});
     const mode=['moments','video15','video30'].includes(data.mode)?data.mode:'moments';
     const style=['自然','故事感','专业','温暖'].includes(data.style)?data.style:'自然';
     const angle=String(data.angle||'').slice(0,250);
     const task=['beauty','business','life','growth','video','product','brand'].includes(data.task)?data.task:'life';
     const taskTitle=String(data.taskTitle||'').slice(0,100);
     const previous=String(data.previous||'').slice(0,1200);
-    const skillId=selectSkill(task,taskTitle,raw);
+    const skillId=topic?(topic.category==='culture'?'F11':topic.category==='beauty'?'F06':topic.category==='business'?'F03':'F05'):selectSkill(task,taskTitle,raw);
     const skill=SKILLS[skillId];
-    const brain=retrieveQingshijiuBrain({raw,taskTitle,task,mode,skillId});
-    const prompt=JSON.stringify({raw,mode,style,task,taskTitle,angle,previous,
+    const topicContext=topic?topic.title+'。'+topic.angle:'';
+    const brain=retrieveQingshijiuBrain({raw:raw||topicContext,taskTitle:topic?.title||taskTitle,task:topic?.category==='business'?'business':topic?.category==='growth'?'growth':topic?'beauty':task,mode,skillId});
+    const prompt=JSON.stringify({raw,mode,style,task,taskTitle:topic?.title||taskTitle,angle,previous,
+      evergreenTopic:topic?{id:topic.id,series:topic.series,title:topic.title,angle:topic.angle,category:topic.category}:undefined,
       brandKnowledgeVersion:KNOWLEDGE_VERSION,
       brandBrain:brain.brand,
       successfulOperatorBrain:brain.operatorMethods,
@@ -99,6 +104,6 @@ export async function onRequestPost({ request, env }) {
     const body=await ai.json();let output;
     try{output=JSON.parse(body.choices[0].message.content);}catch{return Response.json({error:'AI 返回格式错误，请重试'},{status:502});}
     if(!output.content||typeof output.content!=='string')return Response.json({error:'AI 未返回有效文案，请重试'},{status:502});
-    return Response.json({result:output,mode:'live',provider:'deepseek',knowledgeVersion:KNOWLEDGE_VERSION,skill:{id:skillId,name:skill.name},brain:{version:brain.version,brandCardIds:brain.trace.brandIds,operatorSampleIds:brain.trace.sampleIds,personCardIds:brain.trace.personIds}},{headers:{'Cache-Control':'no-store'}});
+    return Response.json({result:output,mode:'live',provider:'deepseek',knowledgeVersion:KNOWLEDGE_VERSION,skill:{id:skillId,name:skill.name},evergreenTopic:topic?{id:topic.id,label:topic.label,title:topic.title}:null,brain:{version:brain.version,brandCardIds:brain.trace.brandIds,operatorSampleIds:brain.trace.sampleIds,personCardIds:brain.trace.personIds}},{headers:{'Cache-Control':'no-store'}});
   }catch(e){return Response.json({error:e.name==='AbortError'?'AI 响应超时，请重试':'生成失败，请稍后再试'},{status:500});}
 }
