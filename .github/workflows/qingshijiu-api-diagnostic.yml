@@ -69,7 +69,7 @@ jobs:
           ]
           for mode,taskTitle,raw in cases:
             body=json.dumps({"raw":raw,"mode":mode,"style":"自然","task":"beauty","taskTitle":taskTitle},ensure_ascii=False).encode("utf-8")
-            req=urllib.request.Request("https://jasminwang.com/api/qingshijiu-generate",data=body,headers={"Content-Type":"application/json"},method="POST")
+            req=urllib.request.Request("https://jasminwang.com/api/qingshijiu-generate",data=body,headers={"Content-Type":"application/json","User-Agent":"QSJ-API-Healthcheck/1.0"},method="POST")
             try:
               res=urllib.request.urlopen(req,timeout=42)
             except urllib.error.HTTPError as e:
