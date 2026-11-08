@@ -1,28 +1,61 @@
-name: Qingshijiu Image First V26 Premerge Tests
+name: Qingshijiu Photo First V26 Production Smoke
 on:
   push:
     branches: [diagnose/qingshijiu-api-20261108]
 permissions:
   contents: read
 jobs:
-  premerge:
+  smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: feat/qingshijiu-photo-first-v26-20261108
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Static code and safe public assets
+      - name: Verify photo-first website and live evergreen writing
+        env:
+          PYTHONUNBUFFERED: "1"
         run: |
-          node --check functions/api/qingshijiu-generate.js
-          node --check dist/qingshijiu/ai-content/photo-ui.js
-          node --check dist/qingshijiu/ai-content/real-ai.js
-          node --check src/qingshijiu-brain/evergreen-topics.js
-          node scripts/verify-public-boundary.mjs
-      - name: Exercise photo-first topic generator and original AI
-        run: node scripts/test-qingshijiu-photo-ui.mjs
-      - name: Check Cloudflare Pages function bundling
-        run: npx --yes wrangler@4 pages functions build functions --outdir=/tmp/qsj-v26-functions
+          sleep 18
+          python3 - <<'PY'
+          import urllib.request,urllib.error,json,time
+          base='https://jasminwang.com/qingshijiu/ai-content/'
+          assets=[
+            ('page',base,'photo-ui.js?v=26'),
+            ('visual-js',base+'photo-ui.js?v=26','photo-tile'),
+            ('visual-css',base+'photo-ui.css?v=26','.topic-picker'),
+            ('photo-face',base+'assets/face.svg','data:image/jpeg;base64,'),
+            ('photo-client',base+'assets/client.svg','data:image/jpeg;base64,'),
+            ('photo-event',base+'assets/team.svg','data:image/jpeg;base64,'),
+            ('photo-avatar',base+'assets/avatar.svg','data:image/jpeg;base64,'),
+            ('real-ai',base+'real-ai.js?v=26','evergreenTopicId'),
+          ]
+          def get(url):
+            req=urllib.request.Request(url,headers={'User-Agent':'QSJ-API-Healthcheck/1.0'})
+            with urllib.request.urlopen(req,timeout=28) as res:
+              return res.status,res.read().decode('utf-8','replace'),res.headers.get('Content-Type','')
+          for label,url,needle in assets:
+            for attempt in range(6):
+              try:
+                code,text,mime=get(url)
+                if code==200 and needle in text:break
+              except Exception as ex:code=0;text='';mime=str(ex)
+              if attempt<5:time.sleep(8)
+            print('ASSET',label,'HTTP',code,'chars',len(text),'type',mime,'correct',needle in text)
+            assert code==200 and needle in text,label
+          code,body,_=get(base+'topics.json?v=26')
+          topics=json.loads(body)
+          print('TOPICS',len(topics),'face',len([t for t in topics if t['series']=='脸部风水']))
+          assert code==200 and len(topics)==18
+          payloads=[
+            {'raw':'','evergreenTopicId':'face01','mode':'moments','task':'beauty'},
+            {'raw':'今天参加品牌培训，跟朋友聊起自己做客户服务的感受，想写一条真实朋友圈。','task':'business','mode':'moments'}
+          ]
+          for p in payloads:
+            data=json.dumps(p,ensure_ascii=False).encode('utf-8')
+            req=urllib.request.Request('https://jasminwang.com/api/qingshijiu-generate',data=data,headers={'User-Agent':'QSJ-API-Healthcheck/1.0','Content-Type':'application/json'},method='POST')
+            with urllib.request.urlopen(req,timeout=45) as res:
+              response=json.load(res)
+              print('AI',res.status,'mode',response.get('mode'),'model',response.get('provider'),'topic',response.get('evergreenTopic'),'brain',response.get('knowledgeVersion'),'content',response.get('result',{}).get('content','')[:300].replace(chr(10),' | '))
+              assert res.status==200 and response.get('mode')=='live' and response.get('knowledgeVersion')=='QSJ-BRAIN-0.4'
+              if p.get('evergreenTopicId'):assert response.get('evergreenTopic',{}).get('id')=='face01'
+              else:assert response.get('evergreenTopic') is None
+          print('PASS: image-first interface photos and DeepSeek real evergreen generation are live')
+          PY
