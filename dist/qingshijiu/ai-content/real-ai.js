@@ -34,6 +34,7 @@
     output.textContent=draft.content;
     if($('mediaTip'))$('mediaTip').textContent='配图/画面建议：'+(trunc(draft.imageTip,350)||'使用本人真实、获授权的素材。');
     const notes=[];
+    if(draft._skill?.id && draft._skill?.name)notes.push('本条调用：轻拾玖内容Skill '+draft._skill.id+'「'+draft._skill.name+'」'+(draft._knowledgeVersion?' · 品牌知识库 '+draft._knowledgeVersion:''));
     if(draft.why)notes.push('写作角度：'+trunc(draft.why,180));
     if(Array.isArray(draft.checks)&&draft.checks.length)notes.push('发布前核对：\n'+draft.checks.slice(0,5).map(s=>'• '+trunc(s,200)).join('\n'));
     checks.textContent=notes.join('\n\n');
@@ -77,7 +78,8 @@
       if(body.mode!=='live'||typeof body.result?.content!=='string'||!body.result.content.trim())throw new Error('接口没有返回真正的AI文案');
       if(n!==requestNo)return;
       if(cacheKey(mode)!==key){status('输入已发生变化，请点击重新生成。',true);return}
-      previousDraft=activeDraft;cache.set(key,body.result);show(body.result,mode);
+      const generated={...body.result,_skill:body.skill||null,_knowledgeVersion:body.knowledgeVersion||''};
+      previousDraft=activeDraft;cache.set(key,generated);show(generated,mode);
     }catch(e){
       if(n===requestNo){
         const reason=e.name==='AbortError'?'AI 连接超时，请重试。':e.message||'AI服务不可用';
