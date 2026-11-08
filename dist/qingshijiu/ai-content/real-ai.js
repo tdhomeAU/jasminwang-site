@@ -1,4 +1,4 @@
-/* 轻拾玖 AI销冠 V2.2 — DeepSeek Flash 真人模型生成；其余页面不动 */
+/* 轻拾玖 AI销冠 V2.3 — 营销人味Skill＋成品不夹带风险说教；其余页面不动 */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
@@ -12,7 +12,7 @@
   const info=document.createElement('div');
   info.id='qsjAiStatus';info.setAttribute('role','status');
   info.style.cssText='font-size:12px;line-height:1.65;color:#e4c99b;margin:9px 2px;min-height:1.4em;white-space:pre-wrap';
-  info.textContent='输入将发送到 AI 服务生成草稿；请隐去客户姓名等隐私，发布前核对事实与授权。';
+  info.textContent='说一件真实发生的事，AI帮你写成能直接发的朋友圈或视频口播。';
   btn.insertAdjacentElement('afterend',info);
   const checks=document.createElement('div');
   checks.id='qsjAiChecks';
@@ -32,13 +32,12 @@
   function show(draft,mode){
     activeDraft=draft;tabs(mode);result.classList.add('show');
     output.textContent=draft.content;
-    if($('mediaTip'))$('mediaTip').textContent='配图/画面建议：'+(trunc(draft.imageTip,350)||'使用本人真实、获授权的素材。');
+    if($('mediaTip'))$('mediaTip').textContent='配图/画面建议：'+(trunc(draft.imageTip,350)||'用手机里现成的照片或视频搭配即可。');
     const notes=[];
-    if(draft._skill?.id && draft._skill?.name)notes.push('本条调用：轻拾玖内容Skill '+draft._skill.id+'「'+draft._skill.name+'」'+(draft._knowledgeVersion?' · 品牌知识库 '+draft._knowledgeVersion:''));
-    if(draft.why)notes.push('写作角度：'+trunc(draft.why,180));
-    if(Array.isArray(draft.checks)&&draft.checks.length)notes.push('发布前核对：\n'+draft.checks.slice(0,5).map(s=>'• '+trunc(s,200)).join('\n'));
+    if(draft._skill?.id && draft._skill?.name)notes.push('这条用了「'+draft._skill.name+'」写法');
+
     checks.textContent=notes.join('\n\n');
-    status('✓ 由 DeepSeek 生成的'+names[mode]+'初稿。请确认事实后发布。');
+    status('✓ '+names[mode]+'写好了，复制去发就行。');
     result.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
   function valid(){return activeDraft&&cache.get(cacheKey(activeMode))===activeDraft}
@@ -93,7 +92,7 @@
     try{
       if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(s);
       else{const a=document.createElement('textarea');a.value=s;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}
-      status('✓ 已复制，请确认后自行发布。');
+      status('✓ 已复制，去微信配上照片就行。');
     }catch{status('复制失败，请长按成品文字复制。',true)}
   }
   btn.onclick=()=>make(defaultMode());
@@ -103,7 +102,7 @@
   if($('videoAction'))$('videoAction').onclick=()=>{
     if(!valid()||activeMode==='moments'){status('请先生成视频脚本。',true);return}
     const avatar=$('avatarMode')?.classList.contains('on');
-    const prefix=avatar?'【数字人制作需求｜视频服务尚未接通】\n请使用获授权的形象、声音和图片。\n\n':'';
+    const prefix=avatar?'【数字人制作需求｜视频服务尚未接通】\n\n':'';
     copyText(prefix+output.textContent);
   };
   const mark=$('markDone');
