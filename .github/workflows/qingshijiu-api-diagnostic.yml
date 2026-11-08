@@ -10,6 +10,49 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Checkout brand-content feature for static and unit tests
+        uses: actions/checkout@v4
+        with:
+          ref: feat/qingshijiu-brand-content-skills-20261108
+      - name: Check frontend and server syntax
+        run: |
+          node --input-type=module --check < functions/api/qingshijiu-generate.js
+          node --check dist/qingshijiu/ai-content/real-ai.js
+      - name: Check brand context, Song isolation and skill routing
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const js=fs.readFileSync('functions/api/qingshijiu-generate.js','utf8');
+          const mod=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
+          async function run(raw,task,taskTitle){
+            let sent;
+            const old=globalThis.fetch;
+            globalThis.fetch=async (_url,opts)=>{
+              sent=JSON.parse(opts.body);
+              return Response.json({choices:[{message:{content:JSON.stringify({title:'测试标题',content:'来自真实经历的测试文案示例，未涉及功效和收益',why:'验证Skill',facts:[],checks:[],imageTip:'真实图片'})}}]});
+            };
+            try{
+              const request=new Request('https://example.com/api/qingshijiu-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw,task,taskTitle,mode:'moments'})});
+              const response=await mod.onRequestPost({request,env:{DEEPSEEK_API_KEY:'test-token'}});
+              const data=await response.json();
+              assert.equal(response.status,200,JSON.stringify(data));
+              assert.equal(data.mode,'live');
+              assert.equal(data.knowledgeVersion,'QSJ-BRAND-SKILL-0.2');
+              return {data,prompt:JSON.parse(sent.messages[1].content)};
+            } finally {globalThis.fetch=old}
+          }
+          const song=await run('今天想认真介绍宋星辉的经营理念和个人转型故事','business','人物故事');
+          assert.equal(song.data.skill.id,'F12');
+          assert.ok(song.prompt.songXinghuiContext.includes('宋星辉'));
+          const regular=await run('今天我参加了总部培训，学习如何更清楚地和客户交流自己的体验','business','团队培训');
+          assert.equal(regular.data.skill.id,'F10');
+          assert.equal(regular.prompt.songXinghuiContext,undefined,'Must not leak Song personal story to other dealers');
+          assert.ok(regular.prompt.brandKnowledge.includes('轻拾玖'));
+          const beauty=await run('今天整理了一位客户不同日期的面部对比照片，想分享真实感受','beauty','客户变化');
+          assert.equal(beauty.data.skill.id,'F09');
+          console.log('PASS: source knowledge, Song story isolation and skill selection');
+          JS
       - name: Probe deployed endpoints from GitHub runner
         env:
           PYTHONUNBUFFERED: "1"
