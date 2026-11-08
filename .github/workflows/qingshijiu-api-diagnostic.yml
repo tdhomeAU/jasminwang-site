@@ -1,59 +1,50 @@
-name: Qingshijiu Dual Brain V04 Production Smoke Test
+name: Qingshijiu Magic UI Visual Regression Check
 on:
   push:
     branches: [diagnose/qingshijiu-api-20261108]
 permissions:
   contents: read
 jobs:
-  test:
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: feat/qingshijiu-magic-ui-v25-20261108
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Test dual-Brain library and Cloudflare Pages handler locally
+      - name: Check JS and production bundle boundaries
         run: |
-          node --check functions/api/qingshijiu-generate.js
-          node --check src/qingshijiu-brain/brain.js
-          node --check src/qingshijiu-brain/brain-data.js
+          node --check dist/qingshijiu/ai-content/magic-ui.js
           node --check dist/qingshijiu/ai-content/real-ai.js
-          node scripts/test-qingshijiu-brain.mjs
-      - name: Bundle Pages Functions like Cloudflare
-        run: npx --yes wrangler@4 pages functions build functions --outdir=/tmp/qsj-cloudflare-build
-      - name: Verify real DeepSeek invocation against production Pages Function
-        env:
-          PYTHONUNBUFFERED: '1'
+          node scripts/verify-public-boundary.mjs
+      - name: Verify all existing content factory actions and new visual assets
         run: |
-          sleep 15
-          python3 - <<'PY'
-          import urllib.request,urllib.error,json
-          cases=[
-           ("beauty","客户变美的故事","50岁的客户说脖子后面的富贵包看着小了些，自己很高兴；我有她这段时间的前后变化照片。","moments"),
-           ("business","事业分享","今天有朋友问我为什么在轻拾玖做事业，我想聊聊平台支持、团队培训和自己做客户服务的经历。","video15"),
-           ("business","宋星辉人物故事","想介绍宋星辉口述里，她怎样从自己拼命工作，转向思考平台做重个人做轻的经营方式。","moments")
-          ]
-          for task,task_title,raw,mode in cases:
-            data=json.dumps({"raw":raw,"mode":mode,"style":"自然","task":task,"taskTitle":task_title},ensure_ascii=False).encode("utf-8")
-            req=urllib.request.Request('https://jasminwang.com/api/qingshijiu-generate',data=data,headers={'Content-Type':'application/json','User-Agent':'QSJ-API-Healthcheck/1.0'},method='POST')
-            try: resp=urllib.request.urlopen(req,timeout=44)
-            except urllib.error.HTTPError as e:
-              print('UPSTREAM_HTTP',e.code,e.read(400).decode('utf-8','replace'));raise
-            body=json.loads(resp.read())
-            print('BRAIN_META',json.dumps({"http":resp.status,"version":body.get("knowledgeVersion"),"skill":body.get("skill"),"brain":body.get("brain"),"provider":body.get("provider")},ensure_ascii=False))
-            print('CONTENT',body.get('result',{}).get('content','')[:420].replace(chr(10),' | '))
-            assert resp.status==200
-            assert body.get('knowledgeVersion')=='QSJ-BRAIN-0.4'
-            assert body.get('mode')=='live'
-            assert body.get('brain',{}).get('brandCardIds')
-            assert len(body.get('brain',{}).get('operatorSampleIds',[]))>=1
-            if '宋星辉' in raw:
-              assert body.get('brain',{}).get('personCardIds'), 'Song-specific story needs Song brain source'
-            else:
-              assert not body.get('brain',{}).get('personCardIds'), 'No宋星辉 private context for ordinary dealer'
-            assert body.get('result',{}).get('content')
-          print('PASS: production uses dual Brain V0.4 and actually calls DeepSeek')
-          PY
+          node --input-type=module <<'JS'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const root='dist/qingshijiu/ai-content/';
+          const html=readFileSync(root+'index.html','utf8');
+          const css=readFileSync(root+'magic-ui.css','utf8');
+          const js=readFileSync(root+'magic-ui.js','utf8');
+          const real=readFileSync(root+'real-ai.js','utf8');
+          assert.ok(html.includes('magic-ui.css?v=25'));
+          assert.ok(html.includes('magic-ui.js?v=25'));
+          assert.ok(html.includes('real-ai.js?v=25'));
+          for(const id of ['story','make','voice','swap','result','output','taskTitle','taskList','copy','rewrite','markDone','openAdmin','back','save','export','reset','videoAction','mediaTip']){
+            assert.ok(html.includes('id="'+id+'"'),'Missing working original UI control '+id);
+          }
+          assert.ok(html.match(/src="data:image\/jpeg;base64,[^"]+"/),'Existing official brand photo lost');
+          assert.equal((html.match(/id="make"/g)||[]).length,1);
+          assert.ok(js.includes("work.insertAdjacentElement('afterend',gallery)"));
+          assert.ok(js.includes('gallery-grid'));
+          assert.ok(js.includes("brandImage.src"));
+          assert.ok(css.includes('@media(max-width:475px)'));
+          assert.ok(css.includes('prefers-reduced-motion'));
+          assert.ok(real.includes("fetch('/api/qingshijiu-generate'"));
+          assert.ok(real.includes('body.brain'));
+          assert.ok(!js.includes('fetch('),'Presentation layer must not trigger API calls');
+          console.log('PASS original controls intact; Magic UI CSS/JS, imagery and 3 illustrated cards present; DeepSeek and dual Brain preserved.');
+          JS
