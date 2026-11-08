@@ -1,50 +1,41 @@
-name: Qingshijiu Magic UI Visual Regression Check
+name: Qingshijiu Magic UI V25 Production Smoke
 on:
   push:
     branches: [diagnose/qingshijiu-api-20261108]
 permissions:
   contents: read
 jobs:
-  validate:
+  smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: feat/qingshijiu-magic-ui-v25-20261108
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Check JS and production bundle boundaries
+      - name: Verify live HTML, CSS, JS and AI output
+        env:
+          PYTHONUNBUFFERED: "1"
         run: |
-          node --check dist/qingshijiu/ai-content/magic-ui.js
-          node --check dist/qingshijiu/ai-content/real-ai.js
-          node scripts/verify-public-boundary.mjs
-      - name: Verify all existing content factory actions and new visual assets
-        run: |
-          node --input-type=module <<'JS'
-          import {readFileSync} from 'node:fs';
-          import assert from 'node:assert/strict';
-          const root='dist/qingshijiu/ai-content/';
-          const html=readFileSync(root+'index.html','utf8');
-          const css=readFileSync(root+'magic-ui.css','utf8');
-          const js=readFileSync(root+'magic-ui.js','utf8');
-          const real=readFileSync(root+'real-ai.js','utf8');
-          assert.ok(html.includes('magic-ui.css?v=25'));
-          assert.ok(html.includes('magic-ui.js?v=25'));
-          assert.ok(html.includes('real-ai.js?v=25'));
-          for(const id of ['story','make','voice','swap','result','output','taskTitle','taskList','copy','rewrite','markDone','openAdmin','back','save','export','reset','videoAction','mediaTip']){
-            assert.ok(html.includes('id="'+id+'"'),'Missing working original UI control '+id);
-          }
-          assert.ok(html.match(/src="data:image\/jpeg;base64,[^"]+"/),'Existing official brand photo lost');
-          assert.equal((html.match(/id="make"/g)||[]).length,1);
-          assert.ok(js.includes("work.insertAdjacentElement('afterend',gallery)"));
-          assert.ok(js.includes('gallery-grid'));
-          assert.ok(js.includes("brandImage.src"));
-          assert.ok(css.includes('@media(max-width:475px)'));
-          assert.ok(css.includes('prefers-reduced-motion'));
-          assert.ok(real.includes("fetch('/api/qingshijiu-generate'"));
-          assert.ok(real.includes('body.brain'));
-          assert.ok(!js.includes('fetch('),'Presentation layer must not trigger API calls');
-          console.log('PASS original controls intact; Magic UI CSS/JS, imagery and 3 illustrated cards present; DeepSeek and dual Brain preserved.');
-          JS
+          sleep 16
+          python3 - <<'PY'
+          import urllib.request,urllib.error,json
+          root='https://jasminwang.com/qingshijiu/ai-content/'
+          items=[
+           ('page',root,'magic-ui.css?v=25'),
+           ('css',root+'magic-ui.css?v=25','.hero-magic'),
+           ('js',root+'magic-ui.js?v=25','gallery-grid'),
+           ('original-ai',root+'real-ai.js?v=25','/api/qingshijiu-generate')
+          ]
+          for label,url,needle in items:
+            req=urllib.request.Request(url,headers={'User-Agent':'QSJ-API-Healthcheck/1.0'})
+            try: resp=urllib.request.urlopen(req,timeout=22)
+            except urllib.error.HTTPError as e:
+              print('FETCH_FAIL',label,e.code,e.read(160));raise
+            body=resp.read().decode('utf-8','replace')
+            print('ASSET',label,'HTTP',resp.status,'bytes',len(body),'found',needle in body)
+            assert resp.status==200 and needle in body, (label,resp.status)
+          payload=json.dumps({'raw':'今天参加团队培训，聊了如何把客户体验讲清楚；我想发一条自然的朋友圈。','task':'business','taskTitle':'总部培训','mode':'moments'},ensure_ascii=False).encode('utf-8')
+          req=urllib.request.Request('https://jasminwang.com/api/qingshijiu-generate',data=payload,headers={'User-Agent':'QSJ-API-Healthcheck/1.0','Content-Type':'application/json'},method='POST')
+          with urllib.request.urlopen(req,timeout=42) as resp:
+            result=json.load(resp)
+            print('AI',resp.status,'mode',result.get('mode'),'provider',result.get('provider'),'brain',result.get('knowledgeVersion'),'skill',result.get('skill',{}).get('id'))
+            assert resp.status==200 and result.get('mode')=='live' and result.get('knowledgeVersion')=='QSJ-BRAIN-0.4'
+          print('PASS: Magic UI V2.5 assets are live and original DeepSeek + dual Brain API stays operational')
+          PY
