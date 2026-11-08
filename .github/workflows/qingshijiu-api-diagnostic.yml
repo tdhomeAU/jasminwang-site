@@ -1,3 +1,4 @@
+# Pre-merge re-test: brand cards and skill routing corrected for 面部对比
 name: Qingshijiu API non-secret deployment diagnostic
 on:
   push:
