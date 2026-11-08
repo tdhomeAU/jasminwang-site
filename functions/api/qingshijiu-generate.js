@@ -7,23 +7,8 @@
 // Sample catalog QSJ-M01..M25 and candidate formulas F01..F11: https://docs.google.com/document/d/1PzxuxVi6_Tn50SJcN2eL5xm9Xe4D9_vTdN0F3OKlL84/edit
 // Song Xinghui oral narrative: https://docs.google.com/document/d/12STiEhruZP5aevt9Df7v2rg_Y2SS6OmpkwLIvwJ2S6Q/edit
 // Product/Skill implementation decisions: https://docs.google.com/document/d/1dt7RgLP4gq2OPz4R1-0XcBI09-PVTnuAAVkY79vJRPE/edit
-const KNOWLEDGE_VERSION='QSJ-BRAND-SKILL-0.3';
-const BRAND_CONTEXT = [
-  '品牌标识：轻拾玖；相关产品线爱米乐 AIMILE。资料里出现“AI高科美”“轻科美”“居家美护”作为品牌营销定位词，不能据此推导技术认证、治疗效果或设备属性。',
-  '品牌主题：变美体验、女性生活、学习成长、伙伴经营。集团传播关注让更多人理解美与生活方式，常用理念“平台做重，个人做轻”。此为商业理念，不意味着平台承担全部成本、风险、售后或保证获客。',
-  '事业表达：有总部资源、产品/供应及培训等经营支持的叙事线索；真实支持项目与责任以现行合同或总部确认文件为准。可围绕伙伴实际参与的培训、见客户、学习、分享展开，不承诺加入即可赚钱。',
-  '产品话题分类：眼周、额头、苹果肌、法令纹、下巴和整体面部状态等，是顾客可能关心的部位/感受，不能推断某款商品能解决它们。某些宣传素材谈“一分钟变美”“免费体验”“9319元”或“五轻模式”，但活动和价格条件未经核实，不可直接当成当前优惠/效果承诺。',
-  '内容素材形式：真实体验场景与照片、空瓶/使用日常、线下团队培训、个人生活、工作交流、经营故事。经销商负责自己选择配图，AI依据其提供的体验和反馈创作，不要把图片审查要求写成朋友圈内容。',
-  '转化动作：可自然邀请私信了解产品或目前实际的体验/合作方式；不知道活动是否存在时，只能说“想了解可以私信交流”，不得声称有免费名额或特定优惠。',
-  '品牌语气：务实、有人情味、像真人分享经历，不高喊收益承诺，也不刻板重复同一话术。'
-].join('\n');
-const SONG_CONTEXT = [
-  '人物：宋星辉。来源为2026年10月31日内部口述整理和人物补充分享稿，属于本人观点/二次编辑材料，不视为外部独立核实的事实。',
-  '故事线索：曾经历高投入、高强度工作；重新思考个人努力与平台资源的关系；了解并参与轻拾玖相关业务与学习；重视把个人经验转化为帮助其他伙伴理解事业的工具。',
-  '代表性观点（仅以“宋星辉的理解/分享”归属）：平台做重、个人做轻；经销商应更多专注客户沟通与服务，合作政策与责任仍需合同核实。',
-  '人物故事的可用方式：只有用户当前输入明确要求介绍宋星辉，才可从这些线索提炼第三人称人物内容；未经本人确认不能把二次编辑稿里具体成交、收入、时间、客户数量、他人对话和效果说成已证实事实。',
-  '禁止把宋星辉的经历、业绩、原话或其他人物私事改写为正在使用工具的经销商本人的第一人称经历。'
-].join('\n');
+import {retrieveQingshijiuBrain, BRAIN_VERSION} from '../../src/qingshijiu-brain/brain.js';
+const KNOWLEDGE_VERSION=BRAIN_VERSION;
 const SKILLS = {
   F01:{name:'部位困扰切片',method:'从用户明确提到的一处困扰和客户的真实反应切入→把这件事讲具体→轻咨询；用户已有的变化反馈如实用个人感受方式表达，不自造疗效或照片细节。',needs:'真实问题、发生场景或感受'},
   F02:{name:'阶段记录',method:'以真实日期/阶段作为叙事结构→本人观察与感受→轻互动。缺少日期则改为“最近的感受”，不编造第N天或阶段性结果。',needs:'真实时间或阶段、本人真实感受'},
@@ -55,7 +40,7 @@ function selectSkill(task,title,raw) {
 const SYSTEM = `你是轻拾玖 AI销冠的资深微信朋友圈文案编辑和短视频编导，最擅长把经销商的一句口述，写成有人味、想让人继续聊的中文内容。
 【工作分工】轻拾玖及经销商自行决定哪些图片、客户反馈和文字可使用；你是营销编辑，不是审核官。用户提供的照片、案例、反馈和故事视为本次创作素材。不要替她决定不配图、不发布，不要在任何成品、配图建议或标题里说“本人授权、隐私、风险、合规、待核实、未经证实、效果不保证、不可发、先不发、要审核”等提醒。不要自作主张把文案变成建议用户“别发照片”的教育文章。
 【事实边界｜内部执行】保留用户明确给出的年龄、客户感受、真实变化与故事，不擅自弱化/删光。用户称“客户觉得”“自己看着变化”时写成客户个人感受或所见，不升级成所有人必然有效；也不虚构医学诊断、治疗承诺、人人收益、回本保证、未给出的数字/对话/动作。不要凭一张对比图凭空写照片里的细节；但既然用户说有照片，就可以在配图建议里说“搭配那组照片”，不需询问使用权限。
-【先理解，再创作】后台提供轻拾玖品牌要点和本次Skill。用Skill决定选题、故事组织、开头与自然咨询动作，不照抄素材原话，也不把宋星辉经历冒用为经销商第一人称。
+【先理解，再创作】后台这次会给你“两层 Brain 的检索结果”：1) 总部品牌 Brain 的可追溯事实/主题卡；2) 宋星辉与经销商录屏观察提炼的营销结构卡（非已验证成交成果）。用当前客户原话作唯一人物事实源，借鉴结构不借用他人经历、截图、效果、业绩、具体天数和原文。只选与当前题目有关的资料，不要在成品里生硬讲品牌知识库、样本编号、公式或者技能。
 【去AI味｜互联网口播语言引擎＋高级嘴替的通用人味规则】
 1. 开头直接用素材里最具体的人、事、困扰、惊喜或小反差；不写“今天整理到一位客户的情况”“在这个快节奏时代”“你有没有发现”“很多时候/其实/说到底”等万能开头。
 2. 像一个真实做生意的人给微信朋友说话，不像品牌宣传册、培训讲师或客服。可以短句、停顿、轻微口语，但不故意撒娇、不夸张喊麦。
@@ -85,12 +70,14 @@ export async function onRequestPost({ request, env }) {
     const previous=String(data.previous||'').slice(0,1200);
     const skillId=selectSkill(task,taskTitle,raw);
     const skill=SKILLS[skillId];
-    const isSong=skillId==='F12';
+    const brain=retrieveQingshijiuBrain({raw,taskTitle,task,mode,skillId});
     const prompt=JSON.stringify({raw,mode,style,task,taskTitle,angle,previous,
       brandKnowledgeVersion:KNOWLEDGE_VERSION,
-      brandKnowledge:BRAND_CONTEXT,
-      songXinghuiContext:isSong?SONG_CONTEXT:undefined,
+      brandBrain:brain.brand,
+      successfulOperatorBrain:brain.operatorMethods,
+      songXinghuiContext:brain.person.length?brain.person:undefined,
       currentMarketingSkill:{id:skillId,name:skill.name,method:skill.method,requiredEvidence:skill.needs},
+      brainEditorialRules:brain.writingInstructions,
       context:'品牌方负责选择发布素材及使用权限；AI只负责营销写作。用户给出的客户变化和感受可作为个案真实经历表达，不凭空夸大普遍疗效。任何发布审核、图片授权、风险核实的话不要写入成品或配图建议。个人经历只来自 raw；历史稿仅用于避免重复。'});
     const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),28000);
     let ai;
@@ -112,6 +99,6 @@ export async function onRequestPost({ request, env }) {
     const body=await ai.json();let output;
     try{output=JSON.parse(body.choices[0].message.content);}catch{return Response.json({error:'AI 返回格式错误，请重试'},{status:502});}
     if(!output.content||typeof output.content!=='string')return Response.json({error:'AI 未返回有效文案，请重试'},{status:502});
-    return Response.json({result:output,mode:'live',provider:'deepseek',knowledgeVersion:KNOWLEDGE_VERSION,skill:{id:skillId,name:skill.name}},{headers:{'Cache-Control':'no-store'}});
+    return Response.json({result:output,mode:'live',provider:'deepseek',knowledgeVersion:KNOWLEDGE_VERSION,skill:{id:skillId,name:skill.name},brain:{version:brain.version,brandCardIds:brain.trace.brandIds,operatorSampleIds:brain.trace.sampleIds,personCardIds:brain.trace.personIds}},{headers:{'Cache-Control':'no-store'}});
   }catch(e){return Response.json({error:e.name==='AbortError'?'AI 响应超时，请重试':'生成失败，请稍后再试'},{status:500});}
 }
