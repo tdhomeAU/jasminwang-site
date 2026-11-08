@@ -14,7 +14,7 @@ jobs:
       - name: Checkout brand-content feature for static and unit tests
         uses: actions/checkout@v4
         with:
-          ref: feat/qingshijiu-brand-content-skills-20261108
+          ref: fix/qingshijiu-marketing-natural-copy-20261108
       - name: Check frontend and server syntax
         run: |
           node --input-type=module --check < functions/api/qingshijiu-generate.js
@@ -39,10 +39,12 @@ jobs:
               const data=await response.json();
               assert.equal(response.status,200,JSON.stringify(data));
               assert.equal(data.mode,'live');
-              assert.equal(data.knowledgeVersion,'QSJ-BRAND-SKILL-0.2');
+              assert.equal(data.knowledgeVersion,'QSJ-BRAND-SKILL-0.3');
               return {data,prompt:JSON.parse(sent.messages[1].content)};
             } finally {globalThis.fetch=old}
           }
+          assert.ok(js.includes('【去AI味｜互联网口播语言引擎＋高级嘴替的通用人味规则】'));
+          assert.ok(js.includes('品牌方负责选择发布素材及使用权限'));
           const song=await run('今天想认真介绍宋星辉的经营理念和个人转型故事','business','人物故事');
           assert.equal(song.data.skill.id,'F12');
           assert.ok(song.prompt.songXinghuiContext.includes('宋星辉'));
@@ -52,7 +54,7 @@ jobs:
           assert.ok(regular.prompt.brandKnowledge.includes('轻拾玖'));
           const beauty=await run('今天整理了一位客户不同日期的面部对比照片，想分享真实感受','beauty','客户变化');
           assert.equal(beauty.data.skill.id,'F09');
-          console.log('PASS: source knowledge, Song story isolation and skill selection');
+          console.log('PASS: real marketing Skill, source knowledge, Song story isolation and F09 selection');
           JS
       - name: Probe deployed endpoints from GitHub runner
         env:
