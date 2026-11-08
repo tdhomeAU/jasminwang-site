@@ -1,4 +1,4 @@
-/* 轻拾玖 AI销冠 V2.1 — 真人模型生成覆盖旧版拼接按钮；其余页面不动 */
+/* 轻拾玖 AI销冠 V2.2 — DeepSeek Flash 真人模型生成；其余页面不动 */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
@@ -37,7 +37,7 @@
     if(draft.why)notes.push('写作角度：'+trunc(draft.why,180));
     if(Array.isArray(draft.checks)&&draft.checks.length)notes.push('发布前核对：\n'+draft.checks.slice(0,5).map(s=>'• '+trunc(s,200)).join('\n'));
     checks.textContent=notes.join('\n\n');
-    status('✓ 由模型生成的'+names[mode]+'初稿。请确认事实后发布。');
+    status('✓ 由 DeepSeek 生成的'+names[mode]+'初稿。请确认事实后发布。');
     result.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
   function valid(){return activeDraft&&cache.get(cacheKey(activeMode))===activeDraft}
@@ -57,7 +57,7 @@
     const angle='内容任务：'+current+'。按轻拾玖相应的营销Skill提炼故事、改写口语，'+(rewrite?'请彻底换叙事角度和开头，避免同义替换。':'不能机械拼接原话。');
     const n=++requestNo;
     working(true);status('正在清理口述、提炼故事、核对表达并生成'+names[mode]+'…');
-    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),40000);
     try{
       const response=await fetch('/api/qingshijiu-generate',{
         method:'POST',credentials:'same-origin',signal:controller.signal,
@@ -71,7 +71,7 @@
           : '接口返回了非 JSON 内容（HTTP '+response.status+'），请检查接口路由。');
       }
       if(!response.ok){
-        const extra=body.upstream_status?'（OpenAI HTTP '+body.upstream_status+(body.upstream_code?' / '+body.upstream_code:'')+'）':'';
+        const extra=body.upstream_status?'（DeepSeek HTTP '+body.upstream_status+(body.upstream_code?' / '+body.upstream_code:'')+'）':'';
         throw new Error((body.error||'AI调用失败（HTTP '+response.status+'）')+extra);
       }
       if(body.mode!=='live'||typeof body.result?.content!=='string'||!body.result.content.trim())throw new Error('接口没有返回真正的AI文案');
