@@ -1,5 +1,5 @@
 # Pre-merge re-test: brand cards and skill routing corrected for 面部对比
-name: Qingshijiu API non-secret deployment diagnostic
+name: Qingshijiu API marketing copy smoke test
 on:
   push:
     branches:
@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Checkout brand-content feature for static and unit tests
+      - name: Checkout current main for static and unit tests
         uses: actions/checkout@v4
         with:
-          ref: fix/qingshijiu-marketing-natural-copy-20261108
+          ref: main
       - name: Check frontend and server syntax
         run: |
           node --input-type=module --check < functions/api/qingshijiu-generate.js
@@ -56,30 +56,36 @@ jobs:
           assert.equal(beauty.data.skill.id,'F09');
           console.log('PASS: real marketing Skill, source knowledge, Song story isolation and F09 selection');
           JS
-      - name: Probe deployed endpoints from GitHub runner
+      - name: Probe real copy from production DeepSeek
         env:
           PYTHONUNBUFFERED: "1"
         run: |
-          sleep 15
+          sleep 18
           python3 - <<'PY'
-          import urllib.request, urllib.error, json
-          roots=["https://jasminwang.com","https://jasminwang-site.pages.dev"]
-          payload=json.dumps({"raw":"今天我参加了一场团队培训，和朋友讨论了怎样认真服务客户，对方说最重视清楚透明的体验流程。","mode":"moments","style":"自然"},ensure_ascii=False).encode("utf-8")
-          for root in roots:
-            for method in ["GET","POST"]:
-              url=root+"/api/qingshijiu-generate"
-              req=urllib.request.Request(url,data=payload if method=="POST" else None,headers={"Content-Type":"application/json","User-Agent":"QSJ-API-Healthcheck/1.0"},method=method)
-              try:
-                res=urllib.request.urlopen(req,timeout=35)
-              except urllib.error.HTTPError as exc: res=exc
-              except Exception as exc:
-                print(root,method,"ERROR",repr(exc));continue
-              body=res.read(150000).decode("utf-8","replace")
-              content_type=res.headers.get("Content-Type","")
-              try:
-                js=json.loads(body)
-                diagnostic={"keys":list(js.keys()),"code":js.get("code"),"mode":js.get("mode"),"provider":js.get("provider"),"knowledgeVersion":js.get("knowledgeVersion"),"skill":js.get("skill"),"generated_sample":str(js.get("result",{}).get("content",""))[:150],"upstream_status":js.get("upstream_status"),"upstream_code":js.get("upstream_code"),"upstream_type":js.get("upstream_type"),"error":str(js.get("error",""))[:120]}
-              except Exception:
-                diagnostic={"non_json_start":body[:100].replace("\n"," ")}
-              print(root,method,"http",res.status,"content_type",content_type,"bytes",len(body),"diagnostic",json.dumps(diagnostic,ensure_ascii=False))
+          import urllib.request, urllib.error, json, re, sys
+          cases=[
+            ("moments","客户变美的故事","50岁的客户说脖子后面的富贵包看着明显小了，她特别开心，想分享给朋友们。我有这段时间的变化照片。"),
+            ("video15","客户变美的故事","46岁的一位客户觉得眼周看起来很疲惫。她来体验后说护理过程很舒服，最近照镜子觉得有变化，也更开心了。")
+          ]
+          for mode,taskTitle,raw in cases:
+            body=json.dumps({"raw":raw,"mode":mode,"style":"自然","task":"beauty","taskTitle":taskTitle},ensure_ascii=False).encode("utf-8")
+            req=urllib.request.Request("https://jasminwang.com/api/qingshijiu-generate",data=body,headers={"Content-Type":"application/json"},method="POST")
+            try:
+              res=urllib.request.urlopen(req,timeout=42)
+            except urllib.error.HTTPError as e:
+              print("API STATUS ERROR",e.code,e.read(600).decode("utf-8","replace"));raise
+            payload=json.loads(res.read().decode("utf-8"))
+            print("RESULT",mode,"status",res.status,"version",payload.get("knowledgeVersion"),"skill",payload.get("skill"),"provider",payload.get("provider"))
+            assert res.status==200
+            assert payload.get("knowledgeVersion")=="QSJ-BRAND-SKILL-0.3",payload.get("knowledgeVersion")
+            assert payload.get("mode")=="live"
+            copy=payload.get("result",{}).get("content","")
+            tip=payload.get("result",{}).get("imageTip","")
+            print("COPY",copy[:800].replace("\n"," | "))
+            print("IMAGE TIP",tip[:200].replace("\n"," | "))
+            for val in [copy,tip]:
+              bad=re.search("授权|审核|客户隐私|待核实|先不发|先不直接发|风险提示|效果不保证|未经证实|不可发布|请先确认",val)
+              assert not bad, f"User-facing permission/risk chatter: {bad.group(0)}"
+            assert len(copy)>25
+          print("PASS: real DeepSeek marketing output, no permission/audit chatter")
           PY
