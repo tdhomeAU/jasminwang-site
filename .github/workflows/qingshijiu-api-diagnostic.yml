@@ -22,6 +22,8 @@ jobs:
           node --check src/qingshijiu-brain/brain-data.js
           node --check dist/qingshijiu/ai-content/real-ai.js
           node scripts/test-qingshijiu-brain.mjs
+      - name: Bundle Pages Functions like Cloudflare
+        run: npx --yes wrangler@4 pages functions build functions --outdir=/tmp/qsj-cloudflare-build
       - name: Verify real DeepSeek invocation against production Pages Function
         env:
           PYTHONUNBUFFERED: '1'
