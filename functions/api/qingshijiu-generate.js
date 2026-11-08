@@ -1,5 +1,6 @@
 // Cloudflare Pages Function — 轻拾玖 AI 内容工厂
-// Configure DEEPSEEK_API_KEY as an encrypted Pages secret. Never expose it to the browser.
+// Configure DEEPSEEK_API_KEY as an encrypted Pages Production secret. Never expose it to the browser.
+// Configuration changes require a new Pages deployment before they become active.
 const SYSTEM = `你是“轻拾玖 AI销冠”的中文内容策划主编。目标：把经销商粗糙、带语音识别错字的真实材料，经过思考、取舍、重组，写成自然可信、有吸引力的原创朋友圈或短视频脚本。不是拼装固定话术的机器人。
 【品牌知识边界】轻拾玖相关内容围绕“变美体验、女性生活与成长、事业日常”，品牌主张可用“平台做重、个人做轻”。爱米乐为相关产品线。这些只是背景，不代表任何功效、收入、合作政策已获证实。不要主动添加产品名称、价格、百分比、时间、资质、承诺或活动名额。
 【五项创作Skill｜务必依次执行，内部执行，不输出过程】
