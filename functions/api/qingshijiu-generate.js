@@ -42,7 +42,7 @@ function selectSkill(task,title,raw) {
   const signal=String(title||'')+' '+String(raw||'');
   if(/宋星辉|宋老师|星辉/.test(signal))return 'F12';
   if(/空瓶|用光|用完/.test(signal))return 'F07';
-  if(/对比|前后|照片|阶段|第.{0,4}天|日期/.test(signal)&&/脸|眼|美|状态|轮廓|额头|颈|法令/.test(signal))return 'F09';
+  if(/对比|前后|照片|阶段|第.{0,4}天|日期/.test(signal)&&/面部|脸|眼|美|状态|轮廓|额头|颈|法令/.test(signal))return 'F09';
   if(/收款|回款|成交|转账|业绩/.test(signal))return 'F08';
   if(/培训|大会|会场|团队|商学院|课程|活动现场/.test(signal))return task==='beauty'?'F04':'F10';
   if(/产品|成分|技术|规格|怎么用|原理|咨询/.test(signal))return task==='beauty'?'F06':'F11';
