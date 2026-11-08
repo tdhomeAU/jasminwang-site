@@ -1,4 +1,4 @@
-name: Qingshijiu Dual Brain V04 Premerge Tests
+name: Qingshijiu Dual Brain V04 Production Smoke Test
 on:
   push:
     branches: [diagnose/qingshijiu-api-20261108]
@@ -11,15 +11,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feat/qingshijiu-two-brains-v04-20261108
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify code syntax
+      - name: Test dual-Brain library and Cloudflare Pages handler locally
         run: |
           node --check functions/api/qingshijiu-generate.js
           node --check src/qingshijiu-brain/brain.js
           node --check src/qingshijiu-brain/brain-data.js
           node --check dist/qingshijiu/ai-content/real-ai.js
-      - name: Exercise source retrieval and Cloudflare handler using mocked provider
-        run: node scripts/test-qingshijiu-brain.mjs
+          node scripts/test-qingshijiu-brain.mjs
+      - name: Verify real DeepSeek invocation against production Pages Function
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          sleep 15
+          python3 - <<'PY'
+          import urllib.request,urllib.error,json
+          cases=[
+           ("beauty","客户变美的故事","50岁的客户说脖子后面的富贵包看着小了些，自己很高兴；我有她这段时间的前后变化照片。","moments"),
+           ("business","事业分享","今天有朋友问我为什么在轻拾玖做事业，我想聊聊平台支持、团队培训和自己做客户服务的经历。","video15")
+          ]
+          for task,task_title,raw,mode in cases:
+            data=json.dumps({"raw":raw,"mode":mode,"style":"自然","task":task,"taskTitle":task_title},ensure_ascii=False).encode("utf-8")
+            req=urllib.request.Request('https://jasminwang.com/api/qingshijiu-generate',data=data,headers={'Content-Type':'application/json','User-Agent':'QSJ-API-Healthcheck/1.0'},method='POST')
+            try: resp=urllib.request.urlopen(req,timeout=44)
+            except urllib.error.HTTPError as e:
+              print('UPSTREAM_HTTP',e.code,e.read(400).decode('utf-8','replace'));raise
+            body=json.loads(resp.read())
+            print('BRAIN_META',json.dumps({"http":resp.status,"version":body.get("knowledgeVersion"),"skill":body.get("skill"),"brain":body.get("brain"),"provider":body.get("provider")},ensure_ascii=False))
+            print('CONTENT',body.get('result',{}).get('content','')[:420].replace(chr(10),' | '))
+            assert resp.status==200
+            assert body.get('knowledgeVersion')=='QSJ-BRAIN-0.4'
+            assert body.get('mode')=='live'
+            assert body.get('brain',{}).get('brandCardIds')
+            assert len(body.get('brain',{}).get('operatorSampleIds',[]))>=1
+            assert not body.get('brain',{}).get('personCardIds'), 'No宋星辉 private context for ordinary dealer'
+            assert body.get('result',{}).get('content')
+          print('PASS: production uses dual Brain V0.4 and actually calls DeepSeek')
+          PY
