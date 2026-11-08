@@ -1,5 +1,5 @@
 // Cloudflare Pages Function — 轻拾玖 AI 内容工厂
-// Configure OPENAI_API_KEY as an encrypted Pages secret. Never expose it to the browser.
+// Configure DEEPSEEK_API_KEY as an encrypted Pages secret. Never expose it to the browser.
 const SYSTEM = `你是“轻拾玖 AI销冠”的中文内容策划主编。目标：把经销商粗糙、带语音识别错字的真实材料，经过思考、取舍、重组，写成自然可信、有吸引力的原创朋友圈或短视频脚本。不是拼装固定话术的机器人。
 【品牌知识边界】轻拾玖相关内容围绕“变美体验、女性生活与成长、事业日常”，品牌主张可用“平台做重、个人做轻”。爱米乐为相关产品线。这些只是背景，不代表任何功效、收入、合作政策已获证实。不要主动添加产品名称、价格、百分比、时间、资质、承诺或活动名额。
 【五项创作Skill｜务必依次执行，内部执行，不输出过程】
@@ -23,8 +23,8 @@ export async function onRequestPost({ request, env }) {
     const origin=request.headers.get('Origin')||'';
     const host=new URL(request.url).origin;
     if(origin && origin!==host) return Response.json({error:'跨域请求不允许'},{status:403});
-    if(!env.OPENAI_API_KEY) return Response.json({error:'AI 服务尚未配置：请在 Cloudflare Pages 中设置 OPENAI_API_KEY。演示内容不代表真实 AI 生成。',code:'NOT_CONFIGURED'},{status:503});
-    const apiKey=String(env.OPENAI_API_KEY||'').trim().replace(/^Bearer\s+/i,'').replace(/^["']|["']$/g,'');
+    if(!env.DEEPSEEK_API_KEY) return Response.json({error:'DeepSeek 尚未接通：请在 Cloudflare Pages Production 中添加 Secret：DEEPSEEK_API_KEY。',code:'NOT_CONFIGURED',provider:'deepseek'},{status:503,headers:{'Cache-Control':'no-store'}});
+    const apiKey=String(env.DEEPSEEK_API_KEY||'').trim().replace(/^Bearer\s+/i,'').replace(/^["']|["']$/g,'');
     const data=await request.json();
     const raw=String(data.raw||'').trim().slice(0,3500);
     if(raw.length<12) return Response.json({error:'请至少说一两句真实发生的事情（不少于12字）'},{status:400});
@@ -35,9 +35,9 @@ export async function onRequestPost({ request, env }) {
     const taskTitle=String(data.taskTitle||'').slice(0,100);
     const previous=String(data.previous||'').slice(0,1200);
     const prompt=JSON.stringify({raw,mode,style,task,taskTitle,angle,previous,context:'输入是未经核实的真实口述，重写时须清理病句、保留事实、不自动承诺效果收益；历史稿仅用于避免重复。'});
-    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),22000);
+    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),28000);
     let ai;
-    try{ai=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-4.1-mini',temperature:0.75,response_format:{type:'json_object'},messages:[{role:'system',content:SYSTEM},{role:'user',content:prompt}]}),signal:controller.signal});}finally{clearTimeout(timeout);}
+    try{ai=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:'deepseek-flash',thinking:{type:'disabled'},temperature:0.75,max_tokens:1200,response_format:{type:'json_object'},messages:[{role:'system',content:SYSTEM},{role:'user',content:prompt}]}),signal:controller.signal});}finally{clearTimeout(timeout);}
     if(!ai.ok) {
       // Report only provider status/code/type: never log or echo credentials, user input, or raw upstream text.
       let provider={};try{provider=await ai.json()}catch{}
@@ -45,15 +45,16 @@ export async function onRequestPost({ request, env }) {
       const upstreamCode=clean(provider?.error?.code);
       const upstreamType=clean(provider?.error?.type);
       let message='AI 模型暂时不可用，请稍后重试。';
-      if(ai.status===401) message='OpenAI 密钥没有通过认证，请检查密钥是否为有效的 OpenAI API Key。';
-      else if(ai.status===403) message='OpenAI 项目权限不足，请检查 API 项目和模型访问权限。';
-      else if(ai.status===429 || upstreamCode==='insufficient_quota') message='OpenAI API 已触发额度或速率限制，请检查账户 API 余额及用量。';
-      else if(ai.status===400 || ai.status===404) message='AI 模型请求或模型名称未被接受，请检查模型配置。';
-      return Response.json({error:message,code:'UPSTREAM_ERROR',upstream_status:ai.status,upstream_code:upstreamCode,upstream_type:upstreamType},{status:424,headers:{'Cache-Control':'no-store'}});
+      if(ai.status===401) message='DeepSeek 密钥无效，请检查 DEEPSEEK_API_KEY 是否来自 DeepSeek API 平台。';
+      else if(ai.status===402) message='DeepSeek 账户余额不足，请先在 DeepSeek API 平台充值。';
+      else if(ai.status===403) message='DeepSeek API 无权访问，请检查 Key 和账户权限。';
+      else if(ai.status===429 || upstreamCode==='insufficient_quota') message='DeepSeek API 触发速率限制，请稍后重试。';
+      else if(ai.status===400 || ai.status===404) message='DeepSeek 模型请求未被接受，请检查接口和模型配置。';
+      return Response.json({error:message,code:'UPSTREAM_ERROR',provider:'deepseek',upstream_status:ai.status,upstream_code:upstreamCode,upstream_type:upstreamType},{status:424,headers:{'Cache-Control':'no-store'}});
     }
     const body=await ai.json();let output;
     try{output=JSON.parse(body.choices[0].message.content);}catch{return Response.json({error:'AI 返回格式错误，请重试'},{status:502});}
     if(!output.content||typeof output.content!=='string')return Response.json({error:'AI 未返回有效文案，请重试'},{status:502});
-    return Response.json({result:output,mode:'live'},{headers:{'Cache-Control':'no-store'}});
+    return Response.json({result:output,mode:'live',provider:'deepseek'},{headers:{'Cache-Control':'no-store'}});
   }catch(e){return Response.json({error:e.name==='AbortError'?'AI 响应超时，请重试':'生成失败，请稍后再试'},{status:500});}
 }
