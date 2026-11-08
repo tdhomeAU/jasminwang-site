@@ -91,7 +91,7 @@ export async function onRequestPost({ request, env }) {
       brandKnowledge:BRAND_CONTEXT,
       songXinghuiContext:isSong?SONG_CONTEXT:undefined,
       currentMarketingSkill:{id:skillId,name:skill.name,method:skill.method,requiredEvidence:skill.needs},
-      context:'所有品牌资料来自内部整理，需遵守证据状态；当前经销商的亲身经历只能来自 raw，不能从人物库挪用。历史稿仅用于避免重复。'});
+      context:'品牌方负责选择发布素材及使用权限；AI只负责营销写作。用户给出的客户变化和感受可作为个案真实经历表达，不凭空夸大普遍疗效。任何发布审核、图片授权、风险核实的话不要写入成品或配图建议。个人经历只来自 raw；历史稿仅用于避免重复。'});
     const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),28000);
     let ai;
     try{ai=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:'deepseek-flash',thinking:{type:'disabled'},temperature:0.75,max_tokens:1200,response_format:{type:'json_object'},messages:[{role:'system',content:SYSTEM},{role:'user',content:prompt}]}),signal:controller.signal});}finally{clearTimeout(timeout);}
