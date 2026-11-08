@@ -106,7 +106,7 @@
     field.focus({preventScroll:true});field.scrollIntoView({behavior:'smooth',block:'center'});
   };
   window.qsjAiChooseTopic=function(topic){
-    if(!topic||!/^face\\d{2}$|^women\\d{2}$/.test(topic.id||''))return;
+    if(!topic||!(/^(face|women)[0-9]{2}$/.test(topic.id||'')))return;
     selectedTopic={id:topic.id,title:String(topic.title||'').slice(0,100)};
     preferredMode='moments';
     field.value='';status('✨ 已选：'+selectedTopic.title+'。正在让 DeepSeek 写成朋友圈…');
