@@ -76,7 +76,7 @@ jobs:
               content_type=res.headers.get("Content-Type","")
               try:
                 js=json.loads(body)
-                diagnostic={"keys":list(js.keys()),"code":js.get("code"),"mode":js.get("mode"),"provider":js.get("provider"),"upstream_status":js.get("upstream_status"),"upstream_code":js.get("upstream_code"),"upstream_type":js.get("upstream_type"),"error":str(js.get("error",""))[:120]}
+                diagnostic={"keys":list(js.keys()),"code":js.get("code"),"mode":js.get("mode"),"provider":js.get("provider"),"knowledgeVersion":js.get("knowledgeVersion"),"skill":js.get("skill"),"generated_sample":str(js.get("result",{}).get("content",""))[:150],"upstream_status":js.get("upstream_status"),"upstream_code":js.get("upstream_code"),"upstream_type":js.get("upstream_type"),"error":str(js.get("error",""))[:120]}
               except Exception:
                 diagnostic={"non_json_start":body[:100].replace("\n"," ")}
               print(root,method,"http",res.status,"content_type",content_type,"bytes",len(body),"diagnostic",json.dumps(diagnostic,ensure_ascii=False))
