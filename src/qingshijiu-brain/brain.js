@@ -44,10 +44,9 @@ export function retrieveQingshijiuBrain({raw='',taskTitle='',task='life',mode='m
   // Business method cards can be borrowed. Song's autobiographical material only when user explicitly requests Song.
   const brandRelevant=selectTop(BRAND_CARDS.filter(x=>x.id!=='B001'),{raw:rawText,title,kind,skillId,limit:2});
   const brand=[BRAND_CARDS[0],...brandRelevant].map(slimBrand);
-  // The first sample must fit the selected Skill; second adds a genuinely different narrative angle when possible.
-  const primary=selectTop(SAMPLE_CARDS.filter(x=>x.skillId===skillId),{raw:rawText,title,kind,skillId,limit:1});
-  const supplementary=selectTop(SAMPLE_CARDS,{raw:rawText,title,kind,skillId,limit:1,exclude:primary.map(x=>x.id),distinctBy:'skillId'})
-    .filter(x=>x.skillId!==primary[0]?.skillId);
+  // Two source examples support the selected Skill; a third, different Skill supplies a contrasting angle.
+  const primary=selectTop(SAMPLE_CARDS.filter(x=>x.skillId===skillId),{raw:rawText,title,kind,skillId,limit:2});
+  const supplementary=selectTop(SAMPLE_CARDS.filter(x=>x.skillId!==skillId),{raw:rawText,title,kind,skillId,limit:1});
   const methods=[...primary,...supplementary].map(slimPattern);
   const person=isSong?selectTop(SONG_CARDS,{raw:rawText,title,kind,skillId,limit:3}).map(x=>({id:x.id,thought:x.thought,evidence:x.evidence})): [];
   return {
