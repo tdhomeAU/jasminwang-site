@@ -33,7 +33,8 @@ jobs:
           import urllib.request,urllib.error,json
           cases=[
            ("beauty","客户变美的故事","50岁的客户说脖子后面的富贵包看着小了些，自己很高兴；我有她这段时间的前后变化照片。","moments"),
-           ("business","事业分享","今天有朋友问我为什么在轻拾玖做事业，我想聊聊平台支持、团队培训和自己做客户服务的经历。","video15")
+           ("business","事业分享","今天有朋友问我为什么在轻拾玖做事业，我想聊聊平台支持、团队培训和自己做客户服务的经历。","video15"),
+           ("business","宋星辉人物故事","想介绍宋星辉口述里，她怎样从自己拼命工作，转向思考平台做重个人做轻的经营方式。","moments")
           ]
           for task,task_title,raw,mode in cases:
             data=json.dumps({"raw":raw,"mode":mode,"style":"自然","task":task,"taskTitle":task_title},ensure_ascii=False).encode("utf-8")
@@ -49,7 +50,10 @@ jobs:
             assert body.get('mode')=='live'
             assert body.get('brain',{}).get('brandCardIds')
             assert len(body.get('brain',{}).get('operatorSampleIds',[]))>=1
-            assert not body.get('brain',{}).get('personCardIds'), 'No宋星辉 private context for ordinary dealer'
+            if '宋星辉' in raw:
+              assert body.get('brain',{}).get('personCardIds'), 'Song-specific story needs Song brain source'
+            else:
+              assert not body.get('brain',{}).get('personCardIds'), 'No宋星辉 private context for ordinary dealer'
             assert body.get('result',{}).get('content')
           print('PASS: production uses dual Brain V0.4 and actually calls DeepSeek')
           PY
