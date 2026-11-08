@@ -1,4 +1,4 @@
-/* 轻拾玖 AI销冠 V2.3 — 营销人味Skill＋成品不夹带风险说教；其余页面不动 */
+/* 轻拾玖 AI销冠 V2.4 — 按任务检索双Brain+营销Skill；其余页面不动 */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
@@ -35,6 +35,8 @@
     if($('mediaTip'))$('mediaTip').textContent='配图/画面建议：'+(trunc(draft.imageTip,350)||'用手机里现成的照片或视频搭配即可。');
     const notes=[];
     if(draft._skill?.id && draft._skill?.name)notes.push('这条用了「'+draft._skill.name+'」写法');
+    if(draft._brain?.operatorSampleIds?.length)notes.push('本条参考：轻拾玖品牌知识 '+(draft._brain.brandCardIds?.length||0)+' 条 · 真实内容样本 '+draft._brain.operatorSampleIds.join('、'));
+    if(draft._brain?.personCardIds?.length)notes.push('人物内容：宋星辉观点资料 '+draft._brain.personCardIds.join('、'));
 
     checks.textContent=notes.join('\n\n');
     status('✓ '+names[mode]+'写好了，复制去发就行。');
@@ -77,7 +79,7 @@
       if(body.mode!=='live'||typeof body.result?.content!=='string'||!body.result.content.trim())throw new Error('接口没有返回真正的AI文案');
       if(n!==requestNo)return;
       if(cacheKey(mode)!==key){status('输入已发生变化，请点击重新生成。',true);return}
-      const generated={...body.result,_skill:body.skill||null,_knowledgeVersion:body.knowledgeVersion||''};
+      const generated={...body.result,_skill:body.skill||null,_brain:body.brain||null,_knowledgeVersion:body.knowledgeVersion||''};
       previousDraft=activeDraft;cache.set(key,generated);show(generated,mode);
     }catch(e){
       if(n===requestNo){
