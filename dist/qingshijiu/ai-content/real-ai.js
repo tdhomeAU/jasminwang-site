@@ -1,10 +1,11 @@
-/* 轻拾玖 AI销冠 V2.4 — 按任务检索双Brain+营销Skill；其余页面不动 */
+/* 轻拾玖 AI销冠 V2.6 — 图片入口＋常青选题真正生成＋双Brain；其余页面不动 */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
   const btn = $('make'), field = $('story'), result = $('result'), output = $('output');
   if (!btn || !field || !result || !output) return;
   let activeMode='moments', activeDraft=null, previousDraft=null, requestNo=0, busy=false;
+  let preferredMode=null,selectedTopic=null;
   const cache=new Map();
   const modes={social:'moments',v15:'video15',v30:'video30'};
   const fmts={moments:'social',video15:'v15',video30:'v30'};
@@ -18,10 +19,10 @@
   checks.id='qsjAiChecks';
   checks.style.cssText='font-size:12px;line-height:1.75;color:#d8ccb9;white-space:pre-wrap;margin:10px 2px';
   $('mediaTip')?.insertAdjacentElement('afterend',checks);
-  const taskTitle=()=>($('taskTitle')?.textContent||'今天的一段真实分享').trim();
+  const taskTitle=()=>selectedTopic?.title||($('taskTitle')?.textContent||'今天的一段真实分享').trim();
   const taskKind=name=>/视频/.test(name)?'video':/客户|变美|体验/.test(name)?'beauty':/产品/.test(name)?'product':/总部|培训/.test(name)?'brand':/事业|创业|生意/.test(name)?'business':'life';
-  const defaultMode=()=>/短视频|视频/.test($('taskTag')?.textContent||'')?'video15':'moments';
-  const cacheKey=mode=>JSON.stringify([taskTitle(),field.value.trim(),mode]);
+  const defaultMode=()=>preferredMode||(/短视频|视频/.test($('taskTag')?.textContent||'')?'video15':'moments');
+  const cacheKey=mode=>JSON.stringify([taskTitle(),selectedTopic?.id||'',field.value.trim(),mode]);
   const status=(s,error=false)=>{info.textContent=s;info.style.color=error?'#ffc3a8':'#e4c99b'};
   const trunc=(s,n)=>String(s||'').slice(0,n);
   function tabs(mode){
@@ -34,6 +35,7 @@
     output.textContent=draft.content;
     if($('mediaTip'))$('mediaTip').textContent='配图/画面建议：'+(trunc(draft.imageTip,350)||'用手机里现成的照片或视频搭配即可。');
     const notes=[];
+    if(draft._evergreenTopic?.title)notes.push('今日灵感：'+draft._evergreenTopic.title);
     if(draft._skill?.id && draft._skill?.name)notes.push('这条用了「'+draft._skill.name+'」写法');
     if(draft._brain?.operatorSampleIds?.length)notes.push('本条参考：轻拾玖品牌知识 '+(draft._brain.brandCardIds?.length||0)+' 条 · 真实内容样本 '+draft._brain.operatorSampleIds.join('、'));
     if(draft._brain?.personCardIds?.length)notes.push('人物内容：宋星辉观点资料 '+draft._brain.personCardIds.join('、'));
@@ -51,12 +53,12 @@
   async function make(mode,rewrite=false){
     if(busy)return;
     const raw=field.value.trim();
-    if(raw.length<12){status('请至少输入12个字，说一件真实发生的事。不会替你编造故事。',true);return}
+    if(raw.length<12&&!selectedTopic){status('说一句真实经历，或者先点一张「找话题」图片。',true);return}
     const key=cacheKey(mode);
     if(!rewrite&&cache.has(key)){show(cache.get(key),mode);return}
     const current=taskTitle();
     const previous=cache.get(key)?.content||previousDraft?.content||'';
-    const angle='内容任务：'+current+'。按轻拾玖相应的营销Skill提炼故事、改写口语，'+(rewrite?'请彻底换叙事角度和开头，避免同义替换。':'不能机械拼接原话。');
+    const angle=selectedTopic?'常青话题：'+current+'。只讲文化趣味或审美观点；没有个人素材时绝不编客户和亲历。': '内容任务：'+current+'。按轻拾玖相应的营销Skill提炼故事、改写口语，'+(rewrite?'请彻底换叙事角度和开头，避免同义替换。':'不能机械拼接原话。');
     const n=++requestNo;
     working(true);status('正在清理口述、提炼故事、核对表达并生成'+names[mode]+'…');
     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),40000);
@@ -64,7 +66,7 @@
       const response=await fetch('/api/qingshijiu-generate',{
         method:'POST',credentials:'same-origin',signal:controller.signal,
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({raw,mode,style:'自然',task:taskKind(current),taskTitle:current,angle,previous:rewrite?previous:''})
+        body:JSON.stringify({raw,mode,style:'自然',task:selectedTopic?'beauty':taskKind(current),taskTitle:current,evergreenTopicId:selectedTopic?.id||'',angle,previous:rewrite?previous:''})
       });
       const responseText=await response.text();
       let body={};try{body=JSON.parse(responseText)}catch{
@@ -79,7 +81,7 @@
       if(body.mode!=='live'||typeof body.result?.content!=='string'||!body.result.content.trim())throw new Error('接口没有返回真正的AI文案');
       if(n!==requestNo)return;
       if(cacheKey(mode)!==key){status('输入已发生变化，请点击重新生成。',true);return}
-      const generated={...body.result,_skill:body.skill||null,_brain:body.brain||null,_knowledgeVersion:body.knowledgeVersion||''};
+      const generated={...body.result,_skill:body.skill||null,_brain:body.brain||null,_evergreenTopic:body.evergreenTopic||null,_knowledgeVersion:body.knowledgeVersion||''};
       previousDraft=activeDraft;cache.set(key,generated);show(generated,mode);
     }catch(e){
       if(n===requestNo){
@@ -97,6 +99,31 @@
       status('✓ 已复制，去微信配上照片就行。');
     }catch{status('复制失败，请长按成品文字复制。',true)}
   }
+  window.qsjAiSetMode=function(mode){
+    if(!['moments','video15','video30'].includes(mode)) return;
+    preferredMode=mode;selectedTopic=null;document.dispatchEvent(new CustomEvent('qsj:topic-cleared'));
+    status(mode==='moments'?'朋友圈创作已选好，说一段话就行。':'视频口播已选好，说一句想讲的故事。');
+    field.focus({preventScroll:true});field.scrollIntoView({behavior:'smooth',block:'center'});
+  };
+  window.qsjAiChooseTopic=function(topic){
+    if(!topic||!(/^(face|women)[0-9]{2}$/.test(topic.id||'')))return;
+    selectedTopic={id:topic.id,title:String(topic.title||'').slice(0,100)};
+    preferredMode='moments';
+    field.value='';status('✨ 已选：'+selectedTopic.title+'。正在让 DeepSeek 写成朋友圈…');
+    document.dispatchEvent(new CustomEvent('qsj:topic-selected',{detail:{...selectedTopic}}));
+    make('moments');
+  };
+  window.qsjAiAvatarScript=function(){
+    selectedTopic=null;preferredMode='video15';
+    document.dispatchEvent(new CustomEvent('qsj:topic-cleared'));
+    status('先用 DeepSeek 写15秒口播，写好后可复制数字人制作任务；视频服务尚未接通。');
+    field.focus({preventScroll:true});field.scrollIntoView({behavior:'smooth',block:'center'});
+  };
+  $('taskList')?.addEventListener('click',ev=>{
+    if(ev.target.closest('[data-i]')){
+      selectedTopic=null;preferredMode=null;document.dispatchEvent(new CustomEvent('qsj:topic-cleared'));
+    }
+  });
   btn.onclick=()=>make(defaultMode());
   if($('rewrite'))$('rewrite').onclick=()=>make(activeMode,true);
   document.querySelectorAll('[data-f]').forEach(x=>{x.onclick=()=>make(modes[x.dataset.f]||'moments')});
