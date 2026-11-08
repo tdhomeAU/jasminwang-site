@@ -1,41 +1,28 @@
-name: Qingshijiu Magic UI V25 Production Smoke
+name: Qingshijiu Image First V26 Premerge Tests
 on:
   push:
     branches: [diagnose/qingshijiu-api-20261108]
 permissions:
   contents: read
 jobs:
-  smoke:
+  premerge:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
-      - name: Verify live HTML, CSS, JS and AI output
-        env:
-          PYTHONUNBUFFERED: "1"
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/qingshijiu-photo-first-v26-20261108
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static code and safe public assets
         run: |
-          sleep 16
-          python3 - <<'PY'
-          import urllib.request,urllib.error,json
-          root='https://jasminwang.com/qingshijiu/ai-content/'
-          items=[
-           ('page',root,'magic-ui.css?v=25'),
-           ('css',root+'magic-ui.css?v=25','.hero-magic'),
-           ('js',root+'magic-ui.js?v=25','gallery-grid'),
-           ('original-ai',root+'real-ai.js?v=25','/api/qingshijiu-generate')
-          ]
-          for label,url,needle in items:
-            req=urllib.request.Request(url,headers={'User-Agent':'QSJ-API-Healthcheck/1.0'})
-            try: resp=urllib.request.urlopen(req,timeout=22)
-            except urllib.error.HTTPError as e:
-              print('FETCH_FAIL',label,e.code,e.read(160));raise
-            body=resp.read().decode('utf-8','replace')
-            print('ASSET',label,'HTTP',resp.status,'bytes',len(body),'found',needle in body)
-            assert resp.status==200 and needle in body, (label,resp.status)
-          payload=json.dumps({'raw':'今天参加团队培训，聊了如何把客户体验讲清楚；我想发一条自然的朋友圈。','task':'business','taskTitle':'总部培训','mode':'moments'},ensure_ascii=False).encode('utf-8')
-          req=urllib.request.Request('https://jasminwang.com/api/qingshijiu-generate',data=payload,headers={'User-Agent':'QSJ-API-Healthcheck/1.0','Content-Type':'application/json'},method='POST')
-          with urllib.request.urlopen(req,timeout=42) as resp:
-            result=json.load(resp)
-            print('AI',resp.status,'mode',result.get('mode'),'provider',result.get('provider'),'brain',result.get('knowledgeVersion'),'skill',result.get('skill',{}).get('id'))
-            assert resp.status==200 and result.get('mode')=='live' and result.get('knowledgeVersion')=='QSJ-BRAIN-0.4'
-          print('PASS: Magic UI V2.5 assets are live and original DeepSeek + dual Brain API stays operational')
-          PY
+          node --check functions/api/qingshijiu-generate.js
+          node --check dist/qingshijiu/ai-content/photo-ui.js
+          node --check dist/qingshijiu/ai-content/real-ai.js
+          node --check src/qingshijiu-brain/evergreen-topics.js
+          node scripts/verify-public-boundary.mjs
+      - name: Exercise photo-first topic generator and original AI
+        run: node scripts/test-qingshijiu-photo-ui.mjs
+      - name: Check Cloudflare Pages function bundling
+        run: npx --yes wrangler@4 pages functions build functions --outdir=/tmp/qsj-v26-functions
