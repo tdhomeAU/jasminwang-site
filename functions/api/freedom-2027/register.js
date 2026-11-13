@@ -3,7 +3,7 @@ export async function onRequestPost({request,env}) {
  if(!env.FREEDOM_DB)return json({error:'报名系统正在配置，请稍后再试。'},503);
  let data;try{if(Number(request.headers.get('content-length')||0)>12000)return json({error:'提交内容过长'},413);data=await request.json()}catch{return json({error:'无效的报名数据'},400)}
  const clean=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
- const name=clean(data.name,80),wechat=clean(data.wechat,100),email=clean(data.email,180),city=clean(data.city,120),goals=Array.isArray(data.goals)?data.goals:[],barriers=Array.isArray(data.barriers)?data.barriers.map(v=>clean(v,160)),expectation=clean(data.expectation,160);
+ const name=clean(data.name,80),wechat=clean(data.wechat,100),email=clean(data.email,180),city=clean(data.city,120),goals=Array.isArray(data.goals)?data.goals:[],barriers=Array.isArray(data.barriers)?data.barriers.map(v=>clean(v,160)):[],expectation=clean(data.expectation,160);
  if(!name||!wechat||!city||!email||!/^\S+@\S+\.\S+$/.test(email)||goals.length<1||goals.length>3||barriers.length<1||barriers.length>6||!expectation||data.consent!==true)return json({error:'请完整填写报名信息并同意活动联系'},400);
  const allowedGoals=['健康减重，保持理想体态','逆龄焕活，越来越年轻有活力','女性荷尔蒙与周期健康（经期、围绝经期、更年期）','提升精力，告别疲惫','改善睡眠，提升身心状态','健康饮食，建立可持续的生活习惯','平衡压力，享受更精彩的生活','其他'];
  const allowedBarriers=['工作、家庭太忙，没有时间','知道该做什么，却很难坚持','尝试过不少方法，但效果不理想','不知道什么方法真正适合自己','缺少一起行动、互相鼓励的伙伴','其他'];
