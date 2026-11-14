@@ -35,6 +35,14 @@ To enable a sender in Resend: create an account, add and verify a dedicated send
 
 Customer email contains only the person's name and ticket (not detailed health answers). Organizer email contains contact details needed for follow-up. No public endpoint should expose registrations; keep the D1 dashboard access-controlled.
 
+## Production configuration observed on 2026-11-14
+User-provided Cloudflare and Resend screenshots confirmed:
+- Resend domain `notify.jasminwang.com` is **Verified**.
+- Cloudflare Pages Production variables include encrypted `RESEND_API_KEY`, `FREEDOM_MAIL_FROM`, and `FREEDOM_NOTIFY_EMAIL`.
+- `FREEDOM_DB` is bound to `freedom-2027-registrations`.
+- Cloudflare deployment for commit `2b3eee6` succeeded at 3:49 PM Melbourne time.
+- **Not yet proven:** email configuration is present in a deployment created after the secrets were added; customer and organizer emails actually deliver. This documentation update triggers a fresh GitHub-connected Pages deployment.
+
 ## Current status
 - [x] Registration table and at least one row visible in D1 dashboard on 2026-11-14.
 - [x] Email code and both form submit field formats prepared in GitHub.
