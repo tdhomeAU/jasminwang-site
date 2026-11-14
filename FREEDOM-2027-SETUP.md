@@ -18,7 +18,7 @@ Sending uses Resend `POST https://api.resend.com/emails`. The API key and sender
 In Workers & Pages > `jasminwang-site` > Settings > Variables and Secrets, configure:
 - `RESEND_API_KEY` — **secret**, write-only; obtain from a Resend account. Never commit it or paste it into a chat or GitHub.
 - `FREEDOM_MAIL_FROM` — variable containing a valid sender at a **verified sending domain**, e.g. `自由女神计划 <tickets@notify.example.com>`. Replace the example with a verified address. Consider a separate sending subdomain, and **do not change existing domain DNS/MX records without approval**.
-- `FREEDOM_NOTIFY_EMAIL` — variable set to the organizer's approved recipient address; **confirm address with the user before configuring**. An older planning note named `yingsun7100@gmail.com`; it has not been reconfirmed here.
+- `FREEDOM_NOTIFY_EMAIL` — set to **`yingsun7100@gmail.com`**, explicitly confirmed by the user on 2026-11-14 as Sun Ying's new-registration notification inbox. This is a notification recipient, not a verified sending address.
 - Optional `FREEDOM_REPLY_TO` — recipient for replies, if wanted.
 
 In Settings > Bindings, verify `FREEDOM_DB` is a D1 binding pointing to `freedom-2027-registrations` **in the Production environment**. Also apply migration if the table is absent; the user saw the table on 2026-11-14. After variables/secrets are saved, trigger a fresh deployment so the production deployment includes them.
