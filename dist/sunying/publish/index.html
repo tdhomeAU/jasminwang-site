@@ -54,12 +54,13 @@ const NOTES_TOKEN_KEY="freedom2027-sunying-workshop-room-v1";
 const NOTES_EDITOR_KEY="freedom2027-sunying-workshop-editor-v1";
 let workshopToken="";
 let workshopDrafts={};
-let workshopEditor="";let workshopConnected=false;
+let workshopEditor="";let workshopConnected=false;let workshopDirty={};
 const workshopTimers={};
 function readStorage(key,fallback){try{return localStorage.getItem(key)||fallback}catch(_){return fallback}}
 function writeStorage(key,value){try{localStorage.setItem(key,value)}catch(_){}}
 function newWorkshopToken(){const bytes=crypto.getRandomValues(new Uint8Array(24));return btoa(String.fromCharCode(...bytes)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
 function draftKey(){return "freedom2027-workshop-drafts-"+workshopToken}
+function dirtyKey(){return "freedom2027-workshop-dirty-"+workshopToken}
 function setWorkshopStatus(message){const node=el("workshopNetStatus");if(node)node.textContent=message}
 function saveWorkshopDraft(){writeStorage(draftKey(),JSON.stringify(workshopDrafts))}
 function showDailyPanel(){el("dailyPanel").hidden=false;el("workshopPanel").hidden=true;el("workshopTab").classList.remove("active");el("workshopTab").setAttribute("aria-pressed","false")}
@@ -70,7 +71,7 @@ function buildWorkshopSection(section){
  const card=createWorkshopElement("article","workshopSection");
  card.append(createWorkshopElement("div","wsTime",section.time),createWorkshopElement("h4","",section.title),createWorkshopElement("p","",section.desc));
  const label=createWorkshopElement("label","workshopNoteLabel","孙颖反馈 · "+section.prompt);label.setAttribute("for","ws-"+section.key);card.append(label);
- const area=createWorkshopElement("textarea");area.id="ws-"+section.key;area.placeholder="在这里直接记录孙颖的想法、修改与待补素材……";area.value=workshopDrafts[section.key]||"";area.addEventListener("input",()=>{workshopDrafts[section.key]=area.value;saveWorkshopDraft();setNoteState(section.key,"已暂存 · 准备同步");clearTimeout(workshopTimers[section.key]);workshopTimers[section.key]=setTimeout(()=>saveWorkshopNote(section.key),1350)});card.append(area);
+ const area=createWorkshopElement("textarea");area.id="ws-"+section.key;area.placeholder="在这里直接记录孙颖的想法、修改与待补素材……";area.value=workshopDrafts[section.key]||"";area.addEventListener("input",()=>{workshopDrafts[section.key]=area.value;workshopDirty[section.key]=true;saveWorkshopDraft();writeStorage(dirtyKey(),JSON.stringify(workshopDirty));setNoteState(section.key,"已暂存 · 准备同步");clearTimeout(workshopTimers[section.key]);workshopTimers[section.key]=setTimeout(()=>saveWorkshopNote(section.key),1350)});card.append(area);
  const footer=createWorkshopElement("div","workshopNoteFooter"),status=createWorkshopElement("span","workshopSaveState",""),button=createWorkshopElement("button","workshopSave","保存笔记");status.id="wsstatus-"+section.key;button.type="button";button.addEventListener("click",()=>saveWorkshopNote(section.key));footer.append(status,button);card.append(footer);
  return card;
 }
@@ -116,7 +117,7 @@ async function syncWorkshopNotes(){
   if(!response.ok||!data.ok)throw Error(data.error||"连接失败");
   workshopConnected=true;
   let count=0;
-  for(const row of data.notes||[]){if(!(row.section_key in workshopDrafts)){workshopDrafts[row.section_key]=row.note;const textarea=el("ws-"+row.section_key);if(textarea)textarea.value=row.note;}count++;}
+  for(const row of data.notes||[]){if(!workshopDirty[row.section_key]){workshopDrafts[row.section_key]=row.note;const textarea=el("ws-"+row.section_key);if(textarea)textarea.value=row.note;}count++;}
   saveWorkshopDraft();setWorkshopStatus("✓ 已连接共享笔记 · 云端有 "+count+" 条记录（如刚做过本机修改，请点击各环节「保存笔记」）");
  }catch(error){workshopConnected=false;setWorkshopStatus("共享同步未连接 · 本机仍可暂存。请确认数据库部署后点击「同步最新反馈」。");}
 }
@@ -129,7 +130,7 @@ async function saveWorkshopNote(key){
  try{
   const response=await fetch("/api/sunying/workshop-notes",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+workshopToken},body:JSON.stringify({section:key,note,editor:workshopEditor})});
   const data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||"保存失败");
-  setNoteState(key,"✓ 已保存共享 · "+workshopEditor+" · "+new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}));workshopConnected=true;setWorkshopStatus("✓ 已连接共享笔记 · 保存成功");
+  if(area.value===note){workshopDirty[key]=false;writeStorage(dirtyKey(),JSON.stringify(workshopDirty));setNoteState(key,"✓ 已保存共享 · "+workshopEditor+" · "+new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}));}else{setNoteState(key,"刚有新修改 · 正在准备再次同步");}workshopConnected=true;setWorkshopStatus("✓ 已连接共享笔记 · 保存成功");
  }catch(error){setNoteState(key,"未同步 · 内容已暂存本机，请稍后重试");setWorkshopStatus("云端暂时未能保存，笔记仍在此设备中。");}
 }
 (function initWorkshop(){
@@ -139,6 +140,7 @@ async function saveWorkshopNote(key){
  writeStorage(NOTES_TOKEN_KEY,workshopToken);
  workshopEditor=readStorage(NOTES_EDITOR_KEY,"");
  try{const x=JSON.parse(readStorage(draftKey(),"{}"));if(x&&typeof x==="object")workshopDrafts=x;}catch(_){}
+ try{const d=JSON.parse(readStorage(dirtyKey(),"{}"));if(d&&typeof d==="object")workshopDirty=d;}catch(_){}
  el("workshopTab").addEventListener("click",()=>{showWorkshop();window.scrollTo({top:0,behavior:"auto"})});
  if(hashValue)showWorkshop();
 })();
