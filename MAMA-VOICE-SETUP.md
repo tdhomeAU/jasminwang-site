@@ -1,6 +1,6 @@
 # 妈妈的 AI 语音健康小伙伴 — V1 私人测试版
 
-> **状态（2026-11-21）：代码已写入开发分支，尚未合并部署。未接入真实 API Key、独立数据库或长辈手机实测。**
+> **状态（2026-11-22）：开发分支已部署至 Cloudflare Preview：** `https://fd671a41.jasminwang-site.pages.dev/mama/`。测试专用 D1 `mama-private-test` 已绑定为 `MAMA_DB`，三张空表已建好；真实账号口令与语音 API Secret 尚未配置，尚未完成真实模型或长辈手机实测。代码未合并到正式网站。
 > 仅供家庭使用。**不要在安装、储存位置、隐私授权和安全检查完成前录入真实医疗资料。**
 
 ## 范围
@@ -14,14 +14,14 @@
 
 ## 一、创建独立数据库
 
-1. 在 Cloudflare 账号创建**与注册系统完全分开的** D1 数据库，建议名 `mama-private-care`。
+1. 已创建**与注册系统完全分开的**测试 D1 数据库 `mama-private-test`（Asia Pacific 区域提示；不代表中国内地数据驻留）。
 2. 新建前审核数据库的所在地、跨境访问和敏感个人信息处理条件。Cloudflare D1 的位置提示不等于中国内地数据驻留保证；如有本地存储/监管要求，改用中国内地合适数据库和后端部署，**不要继续在 D1 存放真实资料**。
-3. 在 Cloudflare Pages 项目 `jasminwang-site` 对测试/预览环境配置 Binding 类型 D1，变量名严格为 `MAMA_DB`，指向这个新数据库。不要指向 `FREEDOM_DB`。
-4. 在新数据库执行 `migrations/0002_mama_private.sql`，确认 3 张表建立成功。
+3. Cloudflare Pages 项目 `jasminwang-site` 的 Preview 环境已绑定 `MAMA_DB` -> `mama-private-test`。既有 `FREEDOM_DB` 未改动。
+4. 已在新数据库执行 `migrations/0002_mama_private.sql`，并在 D1 Studio 只读核验到 `mama_health_records`、`mama_login_failures`、`mama_voice_sessions` 三张表；目前没有真实或虚构健康记录。
 
 ## 二、配置服务端 Secrets（不能提交至 GitHub）
 
-在 Cloudflare Pages 测试/预览环境配置：
+在 Cloudflare Pages 项目 `jasminwang-site` 的 **Preview** 环境配置。检查时上述五项均尚未添加；配置后需要重新部署 Preview 才会生效：
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
