@@ -5,7 +5,7 @@ const json=(body,status=200,headers={})=>new Response(JSON.stringify(body),{stat
 const enc=new TextEncoder();
 const byteEqual=(a,b)=>{if(a.length!==b.length)return false;let mismatch=0;for(let i=0;i<a.length;i++)mismatch|=a[i]^b[i];return mismatch===0;};
 async function digest(s){return new Uint8Array(await crypto.subtle.digest("SHA-256",enc.encode(s)));}
-const b64url=(s)=>btoa(s).replace(/\\+/g,"-").replace(/\\//g,"_").replace(/=+$/,"");
+const b64url=(s)=>btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 async function sign(data,secret){
  const key=await crypto.subtle.importKey("raw",enc.encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
  const sig=await crypto.subtle.sign("HMAC",key,enc.encode(data));
@@ -18,7 +18,7 @@ async function identity(request,env){
  const pieces=raw.split(".");
  if(pieces.length!==4)return null;
  const [role,expiry,nonce,signature]=pieces;
- if(!["mom","family"].includes(role)||!/^\\d{13}$/.test(expiry)||!raw||Date.now()>Number(expiry)||!/^[-_A-Za-z0-9]{10,80}$/.test(nonce))return null;
+ if(!["mom","family"].includes(role)||!/^\d{13}$/.test(expiry)||!raw||Date.now()>Number(expiry)||!/^[-_A-Za-z0-9]{10,80}$/.test(nonce))return null;
  const expected=await sign([role,expiry,nonce].join("."),env.MAMA_SESSION_SECRET);
  if(!byteEqual(enc.encode(signature),enc.encode(expected)))return null;
  return role;
@@ -36,6 +36,7 @@ async function recordAuth({request,env},method){
  let body;try{body=await getBody(request,1000);}catch{return json({error:"请求内容无效"},400);}
  if(body.action==="logout")return json({ok:true},200,{"Set-Cookie":cookie("",0)});
  if(!config(env))return json({error:"家庭专属功能尚未配置"},503);
+ if(body.consent!==true)return json({error:"请先确认隐私告知并同意"},400);
  const ip=request.headers.get("CF-Connecting-IP")||"unknown";
  const keyhash=Array.from(await digest(env.MAMA_SESSION_SECRET+"|"+ip),x=>x.toString(16).padStart(2,"0")).join("");
  try{
