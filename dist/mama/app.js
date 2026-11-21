@@ -123,14 +123,14 @@ function handleSpeech(text){
  if(candidate)showPending(candidate);
 }
 const INSTRUCTIONS="你是面向长辈的中文语音陪伴助手，温和自然地聊天，每次只问一两个简短问题。优先询问今天的心情、睡眠、行走或康复感受，以及是否测量血压、是否按医嘱服药。你是陪伴和自我记录工具，不是医生；不要诊断、解释异常结果为安全、提供药物剂量或建议自行停药或补服。所有药名和服药时间都必须以医生医嘱为准。不能宣称系统已经保存数据；用户说出血压等信息时提醒：请核对记录草稿并说‘确认记录’或者点确认保存。出现新发一侧无力、言语困难、胸痛、呼吸困难等急症迹象，请立即建议拨打中国120。请始终使用普通话口语，不要长篇说教。";
-function stopVoice(message="聊天结束了，明天再来聊也可以。"){
+function stopVoice(message="聊天结束了，明天再来聊也可以。",bad=false){
  const ctx=active;if(!ctx)return;active=null;
- clearTimeout(ctx.timeout);ctx.controller.abort();
+ clearTimeout(ctx.handshakeTimer);ctx.controller.abort();
  ctx.stream?.getTracks().forEach(t=>t.stop());
  ctx.channels.forEach(c=>{try{c.close();}catch{}});
  ctx.peer.close();el.audio.srcObject=null;el.audio.pause();
  el.start.disabled=false;el.start.setAttribute("aria-busy","false");el.stop.disabled=true;
- status(message);
+ status(message,bad);
 }
 async function startVoice(){
  if(active||role!=="mom")return;
@@ -148,11 +148,13 @@ async function startVoice(){
    ctx.ready=true;
    const track=ctx.stream?.getAudioTracks()[0];
    if(track)await ctx.sender.replaceTrack(track);
+   clearTimeout(ctx.handshakeTimer);ctx.handshakeTimer=null;
    status("已经接通啦，直接说话就可以。");
+   sendEvent({type:"response.create",response:{modalities:["audio","text"]}});
   }
   if(evt.type==="conversation.item.input_audio_transcription.completed"&&evt.transcript)handleSpeech(evt.transcript);
   if(evt.type==="response.audio_transcript.done"&&evt.transcript)addTranscript("ai",evt.transcript);
-  if(evt.type==="error"){status("语音模型暂时无法回应。请结束后再试。",true);stopVoice("语音连接已结束。");}
+  if(evt.type==="error")stopVoice("语音服务暂时无法回应。请重新开始；如反复出现，请稍后联系家人。",true);
  }
  function bindChannel(channel){
   ctx.channels.add(channel);
@@ -171,7 +173,8 @@ async function startVoice(){
   if(active!==ctx)return;
   sendEvent({type:"session.update",session:{modalities:["audio","text"],voice:"longanqian_v3.1",
    instructions:INSTRUCTIONS+(memory?" 最近的本人确认记录（仅供追问和陪伴，绝不可作诊断）："+memory:""),
-   input_audio_transcription:{language:"zh"},output_audio:{language:"zh"},turn_detection:{type:"smart_turn"},max_history_turns:12}});
+   input_audio_transcription:{language:"zh"},output_audio:{language:"zh"},
+   turn_detection:{type:"smart_turn_v2"},max_history_turns:20}});
  }
  pc.ondatachannel=event=>bindChannel(event.channel);
  bindChannel(pc.createDataChannel("oai-events"));
@@ -183,7 +186,8 @@ async function startVoice(){
  pc.onconnectionstatechange=()=>{
   if(active!==ctx)return;
   if(pc.connectionState==="connected")tryInitialize();
-  if(["failed","disconnected","closed"].includes(pc.connectionState))stopVoice("语音连接已断开。");
+  if(pc.connectionState==="failed")stopVoice("网络连接失败了。请检查网络后，再点“开始聊天”重试。",true);
+  if(pc.connectionState==="disconnected")stopVoice("网络暂时中断，聊天已结束。请检查网络后重新开始。",true);
  };
  try{
   ctx.sender=pc.addTransceiver("audio",{direction:"sendrecv"}).sender;
@@ -201,8 +205,17 @@ async function startVoice(){
   if(!response.ok){const detail=await response.json().catch(()=>({error:"接口不可用"}));throw new Error(detail.error||"语音连接失败");}
   const sdp=(await response.text()).trim().replace(/\r?\n/g,"\r\n")+"\r\n";
   await pc.setRemoteDescription({type:"answer",sdp});
-  ctx.timeout=setTimeout(()=>stopVoice("本次语音已到15分钟保护时长，可以重新开始聊天。"),15*60*1000);
- }catch(error){if(active===ctx)stopVoice("无法开始语音："+error.message);}
+  const handshakeTimer=setTimeout(()=>{if(active===ctx&&!ctx.ready)stopVoice("连接等待太久了。请检查网络和麦克风权限，再点“开始聊天”重试。",true);},30000);
+  ctx.handshakeTimer=handshakeTimer;
+ }catch(error){
+  if(active===ctx){
+   let message="连接没有成功。请检查网络和麦克风权限，再点“开始聊天”重试。";
+   if(error?.name==="NotAllowedError"||error?.name==="SecurityError")message="还没有麦克风权限。请在浏览器设置中允许本网站使用麦克风，再重新开始。";
+   else if(error?.name==="NotFoundError")message="没有找到可用的麦克风，请检查手机麦克风后重试。";
+   else if(error?.message)message="连接没有成功："+error.message+"。请检查网络后重新开始。";
+   stopVoice(message,true);
+  }
+ }
 }
 el.start.addEventListener("click",startVoice);
 el.stop.addEventListener("click",()=>stopVoice());
