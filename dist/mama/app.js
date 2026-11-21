@@ -25,7 +25,7 @@ async function showPrivate(userRole){
 $("loginForm").addEventListener("submit",async event=>{
  event.preventDefault();
  $("loginMessage").textContent="正在验证…";
- try{const res=await api("auth","POST",{password:$("password").value});$("password").value="";await showPrivate(res.role);}
+ try{const res=await api("auth","POST",{password:$("password").value,consent:$("consent").checked});$("password").value="";await showPrivate(res.role);}
  catch(error){$("loginMessage").textContent=error.message;}
 });
 $("logout").addEventListener("click",async()=>{
@@ -84,17 +84,17 @@ function proposalFromSpeech(heard){
  if(!text)return null;
  // Only measurable blood-pressure formats are converted to structured values.
  // Unclear numbers are not guessed; all candidate records need confirmation.
- let m=text.match(/血压(?:是|为|有|测了|测到|：|:|\\s)*([1-3]?\\d{2})\\s*(?:[\\/、，,比和]|到|\\s+低压\\s*)(\\d{2,3})/);
- if(!m)m=text.match(/高压(?:是|：|:|\\s)*([1-3]?\\d{2}).{0,12}?低压(?:是|：|:|\\s)*(\\d{2,3})/);
+ let m=text.match(/血压(?:是|为|有|测了|测到|：|:|\s)*([1-3]?\d{2})\s*(?:[\/、，,比和]|到|\s+低压\s*)(\d{2,3})/);
+ if(!m)m=text.match(/高压(?:是|：|:|\s)*([1-3]?\d{2}).{0,12}?低压(?:是|：|:|\s)*(\d{2,3})/);
  if(m){
   const systolic=Number(m[1]),diastolic=Number(m[2]);
   if(systolic>=30&&systolic<=350&&diastolic>=20&&diastolic<=250){
-   const pulse=text.match(/(?:心率|心跳|脉搏)(?:是|：|:|\\s)*(\\d{2,3})/);
+   const pulse=text.match(/(?:心率|心跳|脉搏)(?:是|：|:|\s)*(\d{2,3})/);
    return {kind:"vitals",systolic,diastolic,pulse:pulse?Number(pulse[1]):undefined,text};
   }
  }
  if(/血糖/.test(text)){
-  const reading=text.match(/血糖(?:是|为|有|：|:|\\s)*(\\d{1,2}(?:\\.\\d{1,2})?)\\s*(?:毫摩尔|mmol)/i);
+  const reading=text.match(/血糖(?:是|为|有|：|:|\s)*(\d{1,2}(?:\.\d{1,2})?)\s*(?:毫摩尔|mmol)/i);
   if(reading)return {kind:"glucose",value:Number(reading[1]),text};
   return {kind:"feeling",text:"血糖测量（单位待核对）："+text};
  }
@@ -178,10 +178,9 @@ async function startVoice(){
   if(["failed","disconnected","closed"].includes(pc.connectionState))stopVoice("语音连接已断开。");
  };
  try{
-  pc.addTransceiver("audio",{direction:"sendrecv"});
-  ctx.sender=pc.getSenders().find(s=>s.track===null);
+  ctx.sender=pc.addTransceiver("audio",{direction:"sendrecv"}).sender;
   ctx.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});
-  if(active!==ctx)return;
+  if(active!==ctx){ctx.stream.getTracks().forEach(t=>t.stop());return;}
   const offer=await pc.createOffer();await pc.setLocalDescription(offer);
   if(pc.iceGatheringState!=="complete")await new Promise((resolve,reject)=>{
    const timer=setTimeout(()=>{cleanup();reject(new Error("网络握手超时"));},15000);
@@ -192,7 +191,7 @@ async function startVoice(){
   const response=await fetch("/api/mama/sdp",{method:"POST",body:pc.localDescription.sdp,
    headers:{"Content-Type":"application/sdp"},credentials:"same-origin",signal:ctx.controller.signal});
   if(!response.ok){const detail=await response.json().catch(()=>({error:"接口不可用"}));throw new Error(detail.error||"语音连接失败");}
-  const sdp=(await response.text()).trim().replace(/\\r?\\n/g,"\\r\\n")+"\\r\\n";
+  const sdp=(await response.text()).trim().replace(/\r?\n/g,"\r\n")+"\r\n";
   await pc.setRemoteDescription({type:"answer",sdp});
   ctx.timeout=setTimeout(()=>stopVoice("本次语音已到15分钟保护时长，可以重新开始聊天。"),15*60*1000);
  }catch(error){if(active===ctx)stopVoice("无法开始语音："+error.message);}
