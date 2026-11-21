@@ -84,7 +84,7 @@ function proposalFromSpeech(heard){
  if(!text)return null;
  // Only measurable blood-pressure formats are converted to structured values.
  // Unclear numbers are not guessed; all candidate records need confirmation.
- let m=text.match(/血压(?:是|为|有|测了|测到|：|:|\s)*([1-3]?\d{2})\s*(?:[\/、，,比和]|到|\s+低压\s*)(\d{2,3})/);
+ let m=text.match(/血压(?:是|为|有|测了|测到|：|:|\s)*([1-3]?\d{2})\s*(?:[\/、，,比和]|到|\s+低压\s*|\s+)(\d{2,3})/);
  if(!m)m=text.match(/高压(?:是|：|:|\s)*([1-3]?\d{2}).{0,12}?低压(?:是|：|:|\s)*(\d{2,3})/);
  if(m){
   const systolic=Number(m[1]),diastolic=Number(m[2]);
@@ -100,7 +100,7 @@ function proposalFromSpeech(heard){
  }
  if(/药|服药|吃药/.test(text)){
   if(/(?:没吃|没有吃|未吃|忘记吃|漏服|没服|未服)/.test(text))return {kind:"medication_missed",text};
-  if(/(?:吃的药|药的名字|药名|药单|用药清单|每天吃.*(?:片|粒|毫克)|医生开.*药)/.test(text))return {kind:"medication_draft",text};
+  if(/(?:吃的药|药的名字|药名|药单|用药清单|每天吃.*(?:片|粒|毫克|mg)|医生开.*药)/.test(text))return {kind:"medication_draft",text};
   if(/(?:吃过药|药吃了|药吃过|已经吃|刚吃了|服了药|按时服药|已经服药|服用过)/.test(text))return {kind:"medication_taken",text};
  }
  if(/血脂|胆固醇|甘油三酯/.test(text))return {kind:"lipids",text};
@@ -159,10 +159,18 @@ async function startVoice(){
   channel.onopen=()=>{if(active===ctx)tryInitialize();};
   channel.onmessage=message=>{let evt;try{evt=JSON.parse(message.data);}catch{return;}handleEvent(evt,channel).catch(()=>stopVoice("语音连接有问题，请重新试一次。"));};
  }
- function tryInitialize(){
+ async function tryInitialize(){
   if(active!==ctx||ctx.updated||!ctx.created||pc.connectionState!=="connected"||ctx.channel?.readyState!=="open")return;
   ctx.updated=true;
-  sendEvent({type:"session.update",session:{modalities:["audio","text"],voice:"longanqian_v3.1",instructions:INSTRUCTIONS,
+  let memory="";
+  try{
+   const result=await api("records");
+   memory=(result.records||[]).filter(r=>["vitals","feeling","medication_taken","medication_missed"].includes(r.kind))
+    .slice(0,5).map(r=>"（"+tz.format(new Date(r.created_at))+"）"+(r.content?.text||"")).join("；").slice(0,1000);
+  }catch{}
+  if(active!==ctx)return;
+  sendEvent({type:"session.update",session:{modalities:["audio","text"],voice:"longanqian_v3.1",
+   instructions:INSTRUCTIONS+(memory?" 最近的本人确认记录（仅供追问和陪伴，绝不可作诊断）："+memory:""),
    input_audio_transcription:{language:"zh"},output_audio:{language:"zh"},turn_detection:{type:"smart_turn"},max_history_turns:12}});
  }
  pc.ondatachannel=event=>bindChannel(event.channel);
