@@ -6,7 +6,7 @@
 ## 范围
 
 - `/mama/`：手机端中文大字欢迎聊天页。开始语音前需确认隐私说明；聊天不要求登录，不保存聊天记录，也没有健康日记访问权限。家庭日记另需一个全家共用口令；持有口令的成员共用查看、确认和保存权限，记录不区分具体成员。
-- **实时语音**：Qwen Audio 3.1 Realtime Flash，WebRTC SDP 经后端转发，长效 API 密钥绝不放浏览器。语音输入由浏览器发送至阿里云北京区域模型服务。应用不设单次通话时长上限；服务器每天最多发起 8 次握手（不是人民币硬预算上限）。百炼模型当前保留的音频上下文最多 300 秒，较早音频会被模型自动丢弃；这不等于通话时长上限。
+- **实时语音**：默认使用 Qwen3.8 Omni Flash Realtime（账号控制台当前显示 100 万免费 Token），WebRTC SDP 经后端转发，API Key 只在服务端。语音送往阿里云北京区域。应用不设单次通话时长上限；服务器每天最多发起 8 次握手（不是人民币硬预算上限）。模型上下文最多保留 600 秒音频，不等于通话时长上限。
 - **聊天中识别记录**：识别血压/心率、血糖（明确 mmol/L 时）、情绪感受、药物资料草稿、本人报告已服药或漏服药；**只有本人点击确认或口头说“确认记录”后，才保存**。不明确的数字不能作为血压入库。
 - **长期记忆**：只把最近最多 5 条已确认的感受或客观自述放入下次对话的上下文，不把未经核对的药单当作医嘱。
 - **私人健康日记**：单独 D1 绑定 `MAMA_DB`；只向通过家庭口令登录的成员开放。访客语音会话不能读取、确认或保存记录。记录为本人自报，家庭成员共用口令可查看和写入，音频原始流不在本应用存储。阿里云提供商对音频/文本的存储与处理政策须另行确认。
@@ -30,17 +30,19 @@
 | `MAMA_SESSION_SECRET` | Secret | 独立随机签名密钥，至少 32 字节 |
 | `MAMA_QWEN_API_KEY` | Secret | 阿里云百炼**北京区域**密钥 |
 | `MAMA_QWEN_WORKSPACE_ID` | Variable | 百炼北京工作空间 ID，不是 API Key |
+| `MAMA_QWEN_MODEL_ID` | 可选 Variable | 仅允许 `qwen3.8-omni-flash-realtime` 或 `qwen-audio-3.1-realtime-flash`；默认前者 |
 
-阿里云北京模型 `qwen-audio-3.1-realtime-flash` 使用 WebRTC，后端转发 SDP。访客语音会话最多保留 30 天的签名会话状态；首次语音前必须确认隐私告知。家庭日记另需口令登录，记录无法区分具体操作人；敏感真实资料仍需妈妈知情同意。Preview URL 公开可访问，知道链接的人都能尝试使用聊天；当前按每天最多 8 次握手限制，不是金额上限。
+阿里云北京模型通过 WebRTC，由后端转发 SDP。访客语音会话最多保留 30 天的签名会话状态；首次语音前必须确认隐私告知。家庭日记另需口令登录，记录无法区分具体操作人；敏感真实资料仍需妈妈知情同意。Preview URL 公开可访问，知道链接的人都能尝试使用聊天；当前按每天最多 8 次握手限制，不是金额上限。
 请在阿里云控制台配置用量告警/预算策略。应用只有每天最多 8 次握手限制，没有单次通话时长上限，也没有人民币硬预算上限。
 
 ### 当前官方接入与费用核查（2026-11-22）
 
-- 模型 ID：`qwen-audio-3.1-realtime-flash`；北京域名：`{WorkspaceId}.cn-beijing.maas.aliyuncs.com`；路径：`POST /api/v1/webrtc/realtime?model=...`，`Authorization: Bearer <API_KEY>`，`Content-Type: application/sdp`，请求/响应均为 SDP。
-- WebRTC 通过服务端转发 Offer/Answer，API Key 不能进入浏览器。模型支持普通话、WebRTC、连续对话和 `smart_turn_v2`。
-- 官方北京按百万 Token 单价：文本输入 ¥1.5、音频输入 ¥6、文本输出 ¥4.5、音频输出 ¥12；音频按每秒 12.5 Token 计，不足一秒按一秒。官方列出 100 万 Token 限时免费额度（90 天有效期规则），但本账号控制台显示 0/0，因此须视为**当前无可用免费额度**，以控制台为准。
+- 默认模型 ID：`qwen3.8-omni-flash-realtime`；北京域名：`{WorkspaceId}.cn-beijing.maas.aliyuncs.com`；路径：`POST /api/v1/webrtc/realtime?model=...`，`Authorization: Bearer <API_KEY>`，`Content-Type: application/sdp`，请求/响应均为 SDP。配置仅允许此模型或旧版 `qwen-audio-3.1-realtime-flash`。
+- WebRTC 通过服务端转发 Offer/Answer，API Key 不能进入浏览器。Omni 支持普通话、WebRTC、连续对话、`server_vad`，设置 3000ms 静音等待以减少妈妈停顿时被打断；模型 VAD 的实际体验仍需手机验证。
+- 百炼控制台在 2026-11-22 显示 `qwen3.8-omni-flash-realtime` 尚有 100 万免费 Token，有效期截至页面所示日期；旧版 Audio 3.1 没有剩余额度。全局“免费额度用完即停”保持开启，不关闭。
+- 官方北京按百万 Token 单价：文本输入 ¥1.5、音频输入 ¥6、文本输出 ¥4.5、音频输出 ¥12；音频按每秒 12.5 Token 计，不足一秒按一秒。免费额度用尽后，如全局停用规则生效，调用应停止；不可把每天 8 次握手当成人民币预算上限。
 - 多轮上下文会重复计入后续输入，输出文本+音频时文本输出不重复计价。无法仅凭通话分钟数精确保证费用；用量会随对话内容与轮数变化。当前应用不设通话时长上限，每日 8 次握手限制不是金额上限。
-- 未确认账号免费余额或预算前，不要调用真实模型。参考：[WebRTC 接入文档](https://help.aliyun.com/zh/model-studio/audio-realtime-webrtc-access)、[模型价格表](https://help.aliyun.com/zh/model-studio/model-pricing)。
+- 真实语音测试仅使用当前免费额度；不充值、不关闭免费用完即停。参考：[Omni WebRTC 接入文档](https://help.aliyun.com/zh/model-studio/omni-realtime-webrtc-access)、[Omni 客户端事件文档](https://help.aliyun.com/zh/model-studio/client-events)、[模型价格表](https://help.aliyun.com/zh/model-studio/model-pricing)。
 
 ## 三、发布前检查
 

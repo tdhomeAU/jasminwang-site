@@ -118,13 +118,15 @@ async function realtimeSdp({request,env},role){
  if(!["member","guest"].includes(role))return json({error:"请先进入家庭聊天"},403);
  if(!env.MAMA_QWEN_API_KEY||!env.MAMA_QWEN_WORKSPACE_ID||!env.MAMA_DB)return json({error:"语音接口尚未配置"},503);
  if(!/^[a-zA-Z0-9_-]{6,100}$/.test(env.MAMA_QWEN_WORKSPACE_ID))return json({error:"工作空间设置不正确"},503);
+ const model=env.MAMA_QWEN_MODEL_ID||"qwen3.8-omni-flash-realtime";
+ if(!["qwen3.8-omni-flash-realtime","qwen-audio-3.1-realtime-flash"].includes(model))return json({error:"实时语音模型设置不受支持"},503);
  const offer=await request.text();
  if(offer.length<100||offer.length>110000||!offer.startsWith("v=0"))return json({error:"语音握手格式错误"},400);
  try{
   const today=new Date().toISOString().slice(0,10);
   const previous=await env.MAMA_DB.prepare("SELECT count(*) AS n FROM mama_voice_sessions WHERE day=?").bind(today).first();
   if(Number(previous?.n||0)>=8)return json({error:"今天语音连接次数已达保护上限，请明天再试"},429);
-  const url=`https://${env.MAMA_QWEN_WORKSPACE_ID}.cn-beijing.maas.aliyuncs.com/api/v1/webrtc/realtime?model=qwen-audio-3.1-realtime-flash`;
+  const url=`https://${env.MAMA_QWEN_WORKSPACE_ID}.cn-beijing.maas.aliyuncs.com/api/v1/webrtc/realtime?model=${encodeURIComponent(model)}`;
   const answer=await fetch(url,{method:"POST",headers:{"Authorization":"Bearer "+env.MAMA_QWEN_API_KEY,"Content-Type":"application/sdp"},body:offer,signal:AbortSignal.timeout(25000)});
   if(!answer.ok){console.error("Mama model SDP failed with status",answer.status);return json({error:"语音服务连接失败，请检查配置或稍后重试"},502);}
   const sdp=await answer.text();

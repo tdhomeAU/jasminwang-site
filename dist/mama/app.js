@@ -125,7 +125,7 @@ function handleSpeech(text){
  const candidate=proposalFromSpeech(text);
  if(candidate)showPending(candidate);
 }
-const INSTRUCTIONS="你是面向长辈的中文语音陪伴助手，温和自然地聊天，每次只问一两个简短问题。优先询问今天的心情、睡眠、行走或康复感受，以及是否测量血压、是否按医嘱服药。你是陪伴和自我记录工具，不是医生；不要诊断、解释异常结果为安全、提供药物剂量或建议自行停药或补服。所有药名和服药时间都必须以医生医嘱为准。不能宣称系统已经保存数据；用户说出血压等信息时提醒：请核对记录草稿并说‘确认记录’或者点确认保存。出现新发一侧无力、言语困难、胸痛、呼吸困难等急症迹象，请立即建议拨打中国120。请始终使用普通话口语，不要长篇说教。";
+const INSTRUCTIONS="你是妈妈熟悉、亲切的中文聊天伙伴，像家人一样温暖、耐心、有生活气息，不要像客服或机械播报。请用自然普通话，语速舒缓，每次说一两句；妈妈说得慢或停顿时多等一会儿，不要急着接话；她插话时先停下倾听。可以聊家常、心情、睡眠、散步和日常安排，多倾听，少盘问。你是陪伴和自我记录工具，不是医生；不要诊断、解释异常结果为安全、提供药物剂量或建议自行停药或补服。所有药名和服药时间都必须以医生医嘱为准。不能宣称系统已经保存数据；用户说出血压等信息时提醒：请核对记录草稿并说‘确认记录’或者点确认保存。出现新发一侧无力、言语困难、胸痛、呼吸困难等急症迹象，请立即建议拨打中国120。";
 function stopVoice(message="聊天结束了，明天再来聊也可以。",bad=false){
  const ctx=active;if(!ctx)return;active=null;
  clearTimeout(ctx.handshakeTimer);ctx.controller.abort();
@@ -163,7 +163,11 @@ async function startVoice(){
   }
   if(evt.type==="conversation.item.input_audio_transcription.completed"&&evt.transcript)handleSpeech(evt.transcript);
   if(evt.type==="response.audio_transcript.done"&&evt.transcript)addTranscript("ai",evt.transcript);
-  if(evt.type==="error")stopVoice("语音服务暂时无法回应。请重新开始；如反复出现，请稍后联系家人。",true);
+  if(evt.type==="error"){
+   const code=String(evt.error?.code||"");
+   const message=/quota|allocation|free.?tier/i.test(code)?"百炼当前可用额度或模型权限不足，请家人到控制台查看免费额度状态。":"语音服务暂时无法回应（"+(code||"连接错误")+").请重新开始；如反复出现，请稍后联系家人。";
+   stopVoice(message,true);
+  }
  }
  function bindChannel(channel){
   ctx.channels.add(channel);
@@ -180,10 +184,10 @@ async function startVoice(){
     .slice(0,5).map(r=>"（"+tz.format(new Date(r.created_at))+"）"+(r.content?.text||"")).join("；").slice(0,1000);
   }catch{}
   if(active!==ctx)return;
-  sendEvent({type:"session.update",session:{modalities:["audio","text"],voice:"longanqian_v3.1",speech_rate:0.9,
+  sendEvent({type:"session.update",session:{modalities:["text","audio"],voice:"Tina",
    instructions:INSTRUCTIONS+(memory?" 最近的本人确认记录（仅供追问和陪伴，绝不可作诊断）："+memory:""),
-   input_audio_transcription:{language:"zh"},output_audio:{language:"zh"},
-   turn_detection:{type:"smart_turn_v2"},max_history_turns:20}});
+   input_audio_transcription:{model:"qwen3-asr-flash-realtime"},
+   turn_detection:{type:"server_vad",silence_duration_ms:3000}}});
  }
  pc.ondatachannel=event=>bindChannel(event.channel);
  bindChannel(pc.createDataChannel("oai-events"));
