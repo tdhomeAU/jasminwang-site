@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
 const el={private:$("privateArea"),recordsLogin:$("recordsLogin"),status:$("status"),start:$("start"),stop:$("stop"),role:$("roleText"),pending:$("pendingSection"),pendingText:$("pendingText"),conversation:$("conversation"),records:$("records"),audio:$("remoteAudio"),manual:$("manualPanel"),consent:$("consent")};
-let role=null,active=null,pending=null,saving=false;
+let role=null,active=null,pending=null,saving=false,audioContext=null;
 const tz=new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false});
 function status(text,bad=false){el.status.textContent=text;el.status.className=bad?"error":"success";}
 async function api(path,method="GET",body){
@@ -132,12 +132,22 @@ function stopVoice(message="聊天结束了，明天再来聊也可以。",bad=f
  ctx.stream?.getTracks().forEach(t=>t.stop());
  ctx.channels.forEach(c=>{try{c.close();}catch{}});
  ctx.peer.close();el.audio.srcObject=null;el.audio.pause();
+ audioContext?.suspend().catch(()=>{});
  el.start.disabled=false;el.start.setAttribute("aria-busy","false");el.stop.disabled=true;
  status(message,bad);
 }
 async function startVoice(){
  if(active)return;
  if(!el.consent.checked){status("请先勾选上方的知情说明，再开始语音。",true);el.consent.focus();return;}
+ // Unlock the phone's audio output during the same tap that starts the call.
+ let audioUnlock=null;
+ try{
+  const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+  if(AudioContextClass){
+   if(!audioContext){audioContext=new AudioContextClass();audioContext.createMediaElementSource(el.audio).connect(audioContext.destination);}
+   audioUnlock=audioContext.resume();
+  }
+ }catch(error){console.info("Web Audio output unlock unavailable",error?.name);}
  if(!role){
   try{const session=await api("auth","POST",{action:"guest",consent:true});role=session.role;try{localStorage.setItem("mama_voice_consent_v1","yes");}catch{}}
   catch(error){status("暂时不能开始聊天："+error.message,true);return;}
@@ -145,7 +155,7 @@ async function startVoice(){
  try{localStorage.setItem("mama_voice_consent_v1","yes");}catch{}
  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection){status("当前浏览器不支持实时语音，请用最新版手机浏览器。",true);return;}
  el.start.disabled=true;el.stop.disabled=false;el.start.setAttribute("aria-busy","true");status("正在申请麦克风并连接语音…");
- const ctx={peer:new RTCPeerConnection({iceServers:[]}),channels:new Set(),controller:new AbortController(),ready:false,updated:false,created:false,stream:null,channel:null,timeout:null};
+  const ctx={peer:new RTCPeerConnection({iceServers:[]}),channels:new Set(),controller:new AbortController(),ready:false,updated:false,created:false,stream:null,channel:null,timeout:null,audioUnlock};
  active=ctx;const pc=ctx.peer;
  function sendEvent(evt){
   if(ctx.channel?.readyState==="open")ctx.channel.send(JSON.stringify({event_id:"event_"+crypto.randomUUID(),...evt}));
@@ -158,10 +168,15 @@ async function startVoice(){
    const track=ctx.stream?.getAudioTracks()[0];
    if(track)await ctx.sender.replaceTrack(track);
    clearTimeout(ctx.handshakeTimer);ctx.handshakeTimer=null;
-   status("已经接通啦，直接说话就可以。");
+    status("已经接通啦，直接说话就可以。说完停一停，我会用语音回答。");
   }
   if(evt.type==="conversation.item.input_audio_transcription.completed"&&evt.transcript)handleSpeech(evt.transcript);
-  if(evt.type==="response.audio_transcript.done"&&evt.transcript)addTranscript("ai",evt.transcript);
+   if(evt.type==="response.audio_transcript.done"&&evt.transcript){addTranscript("ai",evt.transcript);if(active===ctx&&ctx.audioTrack)status("小伙伴正在用语音回答…");}
+   if(evt.type==="response.audio.done"&&active===ctx){
+    if(!ctx.audioTrack)status("收到语音回复，但手机没有接到播放声音。请点下方播放器的播放键，或检查媒体音量。",true);
+    else if(el.audio.paused||audioContext?.state==="suspended")status("小伙伴的语音回复准备好了，请点下方播放器播放。",true);
+    else status("小伙伴刚才用语音回答了。你可以接着说。");
+   }
   if(evt.type==="error"){
    const code=String(evt.error?.code||evt.error?.type||"连接错误").slice(0,100);
    const detail=String(evt.error?.message||"").replace(/Bearer\s+\S+/gi,"Bearer [已隐藏]").replace(/sk-[A-Za-z0-9_-]+/g,"[已隐藏]").slice(0,180);
@@ -185,7 +200,7 @@ async function startVoice(){
     .slice(0,5).map(r=>"（"+tz.format(new Date(r.created_at))+"）"+(r.content?.text||"")).join("；").slice(0,1000);
   }catch{}
   if(active!==ctx)return;
-  sendEvent({type:"session.update",session:{modalities:["text","audio"],voice:"Tina",
+  sendEvent({type:"session.update",session:{modalities:["text","audio"],audio:{output:{voice:"Tina"}},
    instructions:INSTRUCTIONS+(memory?" 最近的本人确认记录（仅供追问和陪伴，绝不可作诊断）："+memory:""),
    input_audio_transcription:{model:"qwen3-asr-flash-realtime"},
    turn_detection:{type:"server_vad",silence_duration_ms:3000}}});
@@ -194,8 +209,11 @@ async function startVoice(){
  bindChannel(pc.createDataChannel("oai-events"));
  pc.ontrack=event=>{
   if(active!==ctx||event.track.kind!=="audio")return;
+   ctx.audioTrack=event.track;
   const stream=new MediaStream([event.track]);el.audio.srcObject=stream;
-  el.audio.play().catch(()=>status("请点一下下方音频播放器的播放键，开启声音。"));
+   Promise.resolve(ctx.audioUnlock).then(()=>el.audio.play()).catch(()=>{
+    if(active===ctx)status("手机暂时没有自动播放语音。请点下方播放器的播放键听回复。",true);
+   });
  };
  pc.onconnectionstatechange=()=>{
   if(active!==ctx)return;
