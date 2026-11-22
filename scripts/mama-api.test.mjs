@@ -60,6 +60,29 @@ test("realtime model access cannot be used anonymously",async()=>{
  assert.equal(response.status,401);
 });
 
+test("guest SDP exchange proxies the official Beijing WebRTC endpoint without exposing the key",async t=>{
+ const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_QWEN_API_KEY:"server-only-test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123"};
+ const login=await invoke("auth","POST",{action:"guest",consent:true},env);
+ const cookie=login.headers.get("Set-Cookie").split(";")[0];
+ const offer="v=0\r\n"+"o=- 123456789 2 IN IP4 127.0.0.1\r\n".repeat(8);
+ let forwarded;
+ t.mock.method(globalThis,"fetch",async(url,options)=>{
+  forwarded={url:String(url),options};
+  return new Response("v=0\r\nanswer-sdp\r\n",{status:200,headers:{"Content-Type":"application/sdp"}});
+ });
+ const response=await onRequest({request:new Request(base+"/api/mama/sdp",{
+  method:"POST",headers:{Origin:base,Cookie:cookie,"Content-Type":"application/sdp"},body:offer
+ }),env});
+ assert.equal(response.status,200);
+ assert.equal(response.headers.get("Content-Type"),"application/sdp");
+ assert.equal(await response.text(),"v=0\r\nanswer-sdp\r\n");
+ assert.equal(forwarded.url,"https://ws-test123.cn-beijing.maas.aliyuncs.com/api/v1/webrtc/realtime?model=qwen-audio-3.1-realtime-flash");
+ assert.equal(forwarded.options.method,"POST");
+ assert.equal(forwarded.options.headers.Authorization,"Bearer server-only-test-key");
+ assert.equal(forwarded.options.headers["Content-Type"],"application/sdp");
+ assert.equal(forwarded.options.body,offer);
+});
+
 test("cross-origin API posts are rejected",async()=>{
  const response=await onRequest({request:new Request(base+"/api/mama/auth",{
   method:"POST",headers:{Origin:"https://attacker.example","Content-Type":"application/json"},

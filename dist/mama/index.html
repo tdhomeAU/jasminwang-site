@@ -57,7 +57,7 @@
   </section>
   <section id="wordsSection" class="panel">
    <h2>刚才聊到了</h2>
-   <div id="conversation" class="transcript muted" aria-live="polite">这里显示最近的聊天文字；重新打开页面后不会保留。</div>
+   <div id="conversation" class="transcript muted" data-empty="true" aria-live="polite">最近的对话文字会显示在这里；刷新页面后清空。</div>
   </section>
   <details id="recordsLogin" class="panel">
    <summary style="font-size:18px;font-weight:650;cursor:pointer">家庭健康日记（需要家庭口令）</summary>
@@ -78,10 +78,6 @@
      <p class="fine">这是根据语音识别的草稿，可能有错。请核对后再确认，或者直接说“确认记录”“取消记录”。</p>
      <div class="row"><button id="confirm" type="button" class="primary grow">确认保存</button><button id="discard" class="secondary grow" type="button">不保存</button></div>
     </div>
-   </section>
-   <section id="wordsSection" class="panel">
-    <h2>刚才聊到了</h2>
-    <div id="conversation" class="transcript muted" aria-live="polite">这里会显示最近的聊天文字，音频不会被网页录制保存。</div>
    </section>
    <section class="panel">
     <div class="navline"><h2>我的健康日记</h2><button id="refresh" class="secondary" type="button">刷新</button></div>

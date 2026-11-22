@@ -112,7 +112,7 @@ function proposalFromSpeech(heard){
 function addTranscript(speaker,text){
  const div=document.createElement("div");div.style.padding="6px 0";
  div.textContent=(speaker==="user"?"你：":"小伙伴：")+text;
- if(el.conversation.textContent.startsWith("这里会显示"))el.conversation.replaceChildren();
+ if(el.conversation.dataset.empty==="true"){el.conversation.replaceChildren();el.conversation.dataset.empty="false";}
  el.conversation.prepend(div);
  while(el.conversation.children.length>8)el.conversation.lastChild.remove();
 }
@@ -180,7 +180,7 @@ async function startVoice(){
     .slice(0,5).map(r=>"（"+tz.format(new Date(r.created_at))+"）"+(r.content?.text||"")).join("；").slice(0,1000);
   }catch{}
   if(active!==ctx)return;
-  sendEvent({type:"session.update",session:{modalities:["audio","text"],voice:"longanqian_v3.1",
+  sendEvent({type:"session.update",session:{modalities:["audio","text"],voice:"longanqian_v3.1",speech_rate:0.9,
    instructions:INSTRUCTIONS+(memory?" 最近的本人确认记录（仅供追问和陪伴，绝不可作诊断）："+memory:""),
    input_audio_transcription:{language:"zh"},output_audio:{language:"zh"},
    turn_detection:{type:"smart_turn_v2"},max_history_turns:20}});
