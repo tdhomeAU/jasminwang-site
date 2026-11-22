@@ -9,9 +9,9 @@
  <style>
  :root{color-scheme:light;font-family:system-ui,-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;color:#563943;background:#fff8f8}
  *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -10%,#ffdce7 0,transparent 65%),linear-gradient(180deg,#fff0f4,#fffaf7 360px)}
- .shell{max-width:750px;margin:auto;padding:18px 16px 64px}.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(125px,.9fr);align-items:center;gap:8px;padding:4px 6px 18px;text-align:left;min-height:270px}
+ .shell{max-width:750px;margin:auto;padding:18px 16px 64px}.hero{display:block;padding:4px 6px 18px;text-align:left}
  .hero-copy{position:relative;z-index:1}.eyebrow{color:#a56779;font-size:14px;letter-spacing:.04em}.hero h1{font-size:clamp(27px,7vw,38px);line-height:1.2;margin:8px 0;color:#87445c}.hero p{line-height:1.7;font-size:17px;color:#805e69;margin:7px 0}.hero .affirmation{font-size:16px;color:#a05c75}
- .portrait{height:270px;display:flex;align-items:flex-end;justify-content:center;overflow:visible}.portrait img{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 8px 12px #9e587224)}
+ .portrait{height:clamp(310px,105vw,470px);width:min(100%,520px);margin:4px auto 0;overflow:hidden;position:relative;pointer-events:none}.portrait img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 24%;-webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 9%,#000 81%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0%,#000 9%,#000 81%,transparent 100%)}
  .panel{background:#fffdfd;border:1px solid #f4dce3;border-radius:22px;padding:22px;margin:14px 0;box-shadow:0 7px 22px #884b5d0d}
  h2{font-size:21px;margin:0 0 12px}h3{font-size:18px;margin:0 0 10px}
  .muted{color:#596d62;line-height:1.75;font-size:16px}.fine{color:#607268;font-size:13px;line-height:1.6}
@@ -33,8 +33,8 @@
  .error{color:#a12b2b}.success{color:#28734f}.navline{display:flex;justify-content:space-between;align-items:center;gap:10px}
  [hidden]{display:none!important}
  @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
- @media(max-width:380px){.shell{padding-inline:12px}.hero{grid-template-columns:minmax(0,1fr) minmax(112px,.82fr);gap:2px;min-height:238px}.portrait{height:238px}.hero h1{font-size:27px}.hero p{font-size:16px}}
- @media(min-width:700px){.hero{grid-template-columns:minmax(0,1fr) 260px;min-height:330px;padding-top:8px}.portrait{height:320px}}
+ @media(max-width:380px){.shell{padding-inline:12px}.portrait{height:340px}.hero h1{font-size:27px}.hero p{font-size:16px}}
+ @media(min-width:700px){.hero{padding-top:8px}.hero-copy{text-align:center;max-width:620px;margin:0 auto}.portrait{height:440px}}
  </style>
 </head>
 <body>
@@ -47,7 +47,7 @@
     <p class="affirmation">今天也按自己的节奏，过喜欢的生活。想说什么，我都在这儿听。</p>
     <span class="pill">语音不会由本网页录音保存</span>
    </div>
-   <div class="portrait"><img src="./zheng-mama-hero.png" alt="郑妈妈抱着鲜花，温暖地微笑"></div>
+   <div class="portrait"><img src="./zheng-mama-original.jpg" alt="郑妈妈抱着鲜花，温暖地微笑"></div>
   </header>
   <section id="consentPanel" class="panel">
    <h2>第一次聊天前，请看一下</h2>
@@ -56,7 +56,7 @@
   </section>
   <section id="voicePanel" class="panel">
    <h2>今天想跟我聊聊吗？</h2>
-   <p class="muted">点一下粉色圆钮，就像打电话一样自然说话；结束时再点「结束聊天」。</p>
+   <p class="muted">只需开始时点一次。接通后一直聊，不用每句话按按钮；说完停一停，我会接着回答，你也可以随时插话。</p>
    <button id="start" class="mic" type="button">🎙️<br>开始聊天</button>
    <button id="stop" class="wide secondary" type="button" disabled>结束聊天</button>
    <p id="status" role="status">准备好时，点「开始聊天」</p>

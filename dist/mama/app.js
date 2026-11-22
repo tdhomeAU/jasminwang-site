@@ -159,13 +159,14 @@ async function startVoice(){
    if(track)await ctx.sender.replaceTrack(track);
    clearTimeout(ctx.handshakeTimer);ctx.handshakeTimer=null;
    status("已经接通啦，直接说话就可以。");
-   sendEvent({type:"response.create",response:{modalities:["audio","text"]}});
   }
   if(evt.type==="conversation.item.input_audio_transcription.completed"&&evt.transcript)handleSpeech(evt.transcript);
   if(evt.type==="response.audio_transcript.done"&&evt.transcript)addTranscript("ai",evt.transcript);
   if(evt.type==="error"){
-   const code=String(evt.error?.code||"");
-   const message=/quota|allocation|free.?tier/i.test(code)?"百炼当前可用额度或模型权限不足，请家人到控制台查看免费额度状态。":"语音服务暂时无法回应（"+(code||"连接错误")+").请重新开始；如反复出现，请稍后联系家人。";
+   const code=String(evt.error?.code||evt.error?.type||"连接错误").slice(0,100);
+   const detail=String(evt.error?.message||"").replace(/Bearer\s+\S+/gi,"Bearer [已隐藏]").replace(/sk-[A-Za-z0-9_-]+/g,"[已隐藏]").slice(0,180);
+   console.warn("Mama realtime provider error",{code,detail,param:String(evt.error?.param||"").slice(0,80)});
+   const message=/quota|allocation|free.?tier|billing|insufficient/i.test(code+" "+detail)?"百炼当前可用额度或模型权限不足，请家人到控制台查看免费额度状态。":"语音服务暂时无法回应（"+code+(detail?"："+detail:"")+"）。请重新开始；如反复出现，请把这条提示告诉家人。";
    stopVoice(message,true);
   }
  }
