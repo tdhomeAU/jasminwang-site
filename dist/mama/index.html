@@ -37,33 +37,40 @@
 <body>
  <main class="shell">
   <header class="hero">
-   <div class="eyebrow">只属于家人的私人空间</div>
+   <div class="eyebrow">家庭测试版 · 不代替医生</div>
    <h1>🌿 妈妈的健康小伙伴</h1>
-   <p>聊聊今天的心情，记下每天的小进步。</p>
-   <span class="pill">家庭测试版 · 不代替医生</span>
+   <p>欢迎回来。点一下「开始聊天」，就可以慢慢聊今天的心情和生活。</p>
+   <span class="pill">语音不会由本网页录音保存</span>
   </header>
-  <section id="loginPanel" class="panel login">
-   <h2>欢迎回家</h2>
-   <p class="muted">输入全家共用的口令，就可以开始聊天、查看和确认保存家庭记录。</p>
+  <section id="consentPanel" class="panel">
+   <h2>第一次聊天前，请看一下</h2>
+   <p class="fine">开始语音前，请确认你同意将语音交给国内 AI 服务处理。数据位置和服务商隐私设置仍待家人核查；测试时请只说虚构信息，不要说真实病历、密码或身份证号码。</p>
+   <label style="font-weight:400;display:flex;align-items:flex-start;gap:10px;line-height:1.7;font-size:15px"><input id="consent" type="checkbox" style="width:22px;height:22px;flex:0 0 22px;margin-top:3px">我已了解并同意</label>
+  </section>
+  <section id="voicePanel" class="panel">
+   <h2>今天想跟我聊聊吗？</h2>
+   <p class="muted">点一下绿色圆钮，就像打电话一样自然说话；结束时再点「结束聊天」。</p>
+   <button id="start" class="mic" type="button">🎙️<br>开始聊天</button>
+   <button id="stop" class="wide secondary" type="button" disabled>结束聊天</button>
+   <p id="status" role="status">准备好时，点「开始聊天」</p>
+   <audio id="remoteAudio" autoplay playsinline controls style="width:100%;margin-top:10px"></audio>
+  </section>
+  <section id="wordsSection" class="panel">
+   <h2>刚才聊到了</h2>
+   <div id="conversation" class="transcript muted" aria-live="polite">这里显示最近的聊天文字；重新打开页面后不会保留。</div>
+  </section>
+  <details id="recordsLogin" class="panel">
+   <summary style="font-size:18px;font-weight:650;cursor:pointer">家庭健康日记（需要家庭口令）</summary>
+   <p class="fine">聊天不需要登录。查看或保存家庭健康记录时，仍需验证家庭口令。</p>
    <form id="loginForm">
-    <label for="password">家庭共用口令</label>
+    <label for="password">家庭共用口令（至少 12 个字符）</label>
     <input id="password" type="password" autocomplete="current-password" minlength="12" required placeholder="请输入家庭口令">
-    <label style="font-weight:400;display:flex;align-items:flex-start;gap:10px;line-height:1.7;font-size:14px"><input id="consent" type="checkbox" required style="width:22px;height:22px;flex:0 0 22px;margin-top:3px">我知晓家庭成员共用此口令后都能查看和确认保存家庭记录；同意在家庭测试期间将语音交由国内 AI 服务处理，并了解数据位置与隐私配置仍待核查。</label>
-    <button class="primary wide" type="submit" style="margin-top:16px">进入我的小天地</button>
+    <button class="primary wide" type="submit" style="margin-top:12px">打开家庭日记</button>
    </form>
    <p id="loginMessage" class="fine" role="status"></p>
-  </section>
+  </details>
   <div id="privateArea" hidden>
-   <div class="navline"><span id="roleText" class="pill"></span><button id="logout" class="secondary" type="button">退出</button></div>
-   <section id="voicePanel" class="panel">
-    <h2>今天想跟我聊聊吗？</h2>
-    <p class="muted">点一下绿色圆钮，就像面对面聊天一样自然说话；结束时再点“结束聊天”。</p>
-    <button id="start" class="mic" type="button">🎙️<br>开始聊天</button>
-    <button id="stop" class="wide secondary" type="button" disabled>结束聊天</button>
-    <p id="status" role="status">还没有开始聊天</p>
-    <audio id="remoteAudio" autoplay playsinline controls style="width:100%;margin-top:10px"></audio>
-    <div class="callout" style="margin-top:12px">系统只会在你确认后保存健康记录。说“确认记录”也可以完成保存。</div>
-   </section>
+   <div class="navline"><span id="roleText" class="pill">家庭共享空间</span><button id="logout" class="secondary" type="button">退出家庭日记</button></div>
    <section id="pendingSection" class="panel" hidden>
     <h2>帮你记下这一条，好吗？</h2>
     <div class="pending">

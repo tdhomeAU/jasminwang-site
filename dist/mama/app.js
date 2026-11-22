@@ -1,5 +1,5 @@
 const $=id=>document.getElementById(id);
-const el={login:$("loginPanel"),private:$("privateArea"),status:$("status"),start:$("start"),stop:$("stop"),role:$("roleText"),pending:$("pendingSection"),pendingText:$("pendingText"),conversation:$("conversation"),records:$("records"),audio:$("remoteAudio"),manual:$("manualPanel")};
+const el={private:$("privateArea"),recordsLogin:$("recordsLogin"),status:$("status"),start:$("start"),stop:$("stop"),role:$("roleText"),pending:$("pendingSection"),pendingText:$("pendingText"),conversation:$("conversation"),records:$("records"),audio:$("remoteAudio"),manual:$("manualPanel"),consent:$("consent")};
 let role=null,active=null,pending=null,saving=false;
 const tz=new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false});
 function status(text,bad=false){el.status.textContent=text;el.status.className=bad?"error":"success";}
@@ -12,19 +12,22 @@ async function api(path,method="GET",body){
  return data;
 }
 async function init(){
- try{const session=await api("auth");if(session.authenticated)showPrivate(session.role);
- else if(!session.ready)$("loginMessage").textContent="当前是开发测试版。后台账号、数据库和语音密钥尚未配置时不能使用。";
- }catch{$("loginMessage").textContent="还不能连接到家庭服务。请确认网站部署。";}
+ try{el.consent.checked=localStorage.getItem("mama_voice_consent_v1")==="yes";}catch{}
+ try{const session=await api("auth");
+  if(session.authenticated&&session.role==="member")await showPrivate(session.role);
+  else if(session.authenticated&&session.role==="guest"){role="guest";el.consent.checked=true;}
+  else if(!session.ready)status("语音服务还没有配置好，请稍后联系家人。",true);
+ }catch{status("还不能连接到家庭服务，请稍后再试。",true);}
 }
 async function showPrivate(userRole){
- role=userRole;el.login.hidden=true;el.private.hidden=false;
+ role=userRole;el.private.hidden=false;el.recordsLogin.hidden=true;
  el.role.textContent="家庭共享空间";
  await refresh();
 }
 $("loginForm").addEventListener("submit",async event=>{
  event.preventDefault();
  $("loginMessage").textContent="正在验证…";
- try{const res=await api("auth","POST",{password:$("password").value,consent:$("consent").checked});$("password").value="";await showPrivate(res.role);}
+ try{const res=await api("auth","POST",{password:$("password").value});$("password").value="";await showPrivate(res.role);}
  catch(error){$("loginMessage").textContent=error.message;}
 });
 $("logout").addEventListener("click",async()=>{
@@ -115,6 +118,7 @@ function addTranscript(speaker,text){
 }
 function handleSpeech(text){
  addTranscript("user",text);
+ if(role!=="member")return;
  if(/^(?:好|嗯|好的)?(?:确认记录|确认保存|可以保存|保存吧|就这样保存)/.test(text)&&pending){savePending();return;}
  if(/^(?:取消记录|不要保存|不保存)/.test(text)&&pending){pending=null;el.pending.hidden=true;status("已取消待保存内容。");return;}
  if(pending)return; // Don't silently overwrite an unconfirmed record.
@@ -132,7 +136,13 @@ function stopVoice(message="聊天结束了，明天再来聊也可以。",bad=f
  status(message,bad);
 }
 async function startVoice(){
- if(active||!role)return;
+ if(active)return;
+ if(!el.consent.checked){status("请先勾选上方的知情说明，再开始语音。",true);el.consent.focus();return;}
+ if(!role){
+  try{const session=await api("auth","POST",{action:"guest",consent:true});role=session.role;try{localStorage.setItem("mama_voice_consent_v1","yes");}catch{}}
+  catch(error){status("暂时不能开始聊天："+error.message,true);return;}
+ }
+ try{localStorage.setItem("mama_voice_consent_v1","yes");}catch{}
  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection){status("当前浏览器不支持实时语音，请用最新版手机浏览器。",true);return;}
  el.start.disabled=true;el.stop.disabled=false;el.start.setAttribute("aria-busy","true");status("正在申请麦克风并连接语音…");
  const ctx={peer:new RTCPeerConnection({iceServers:[]}),channels:new Set(),controller:new AbortController(),ready:false,updated:false,created:false,stream:null,channel:null,timeout:null};

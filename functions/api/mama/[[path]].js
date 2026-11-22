@@ -12,14 +12,16 @@ async function sign(data,secret){
  return b64url(String.fromCharCode(...new Uint8Array(sig)));
 }
 function sharedPassword(env){return env.MAMA_SHARED_PASSWORD||env.MAMA_MOTHER_PASSWORD||"";}
-function config(env){return Boolean(env.MAMA_DB && env.MAMA_SESSION_SECRET && sharedPassword(env));}
+function sessionReady(env){return Boolean(env.MAMA_DB && env.MAMA_SESSION_SECRET);}
+function voiceReady(env){return Boolean(sessionReady(env)&&env.MAMA_QWEN_API_KEY&&env.MAMA_QWEN_WORKSPACE_ID);}
+function config(env){return voiceReady(env);}
 async function identity(request,env){
  const raw=(request.headers.get("Cookie")||"").split(";").map(s=>s.trim()).find(s=>s.startsWith("mama_session="))?.slice(13);
  if(!raw||!env.MAMA_SESSION_SECRET||raw.length>400)return null;
  const pieces=raw.split(".");
  if(pieces.length!==4)return null;
  const [role,expiry,nonce,signature]=pieces;
- if(role!=="member"||!/^\d{13}$/.test(expiry)||!raw||Date.now()>Number(expiry)||!/^[-_A-Za-z0-9]{10,80}$/.test(nonce))return null;
+ if(!["member","guest"].includes(role)||!/^\d{13}$/.test(expiry)||!raw||Date.now()>Number(expiry)||!/^[-_A-Za-z0-9]{10,80}$/.test(nonce))return null;
  const expected=await sign([role,expiry,nonce].join("."),env.MAMA_SESSION_SECRET);
  if(!byteEqual(enc.encode(signature),enc.encode(expected)))return null;
  return role;
@@ -37,7 +39,14 @@ async function recordAuth({request,env},method){
  let body;try{body=await getBody(request,1000);}catch{return json({error:"请求内容无效"},400);}
  if(body.action==="logout")return json({ok:true},200,{"Set-Cookie":cookie("",0)});
  if(!config(env))return json({error:"家庭专属功能尚未配置"},503);
- if(body.consent!==true)return json({error:"请先确认隐私告知并同意"},400);
+ if(body.action==="guest"){
+  if(body.consent!==true)return json({error:"请先确认语音隐私告知"},400);
+  const expiry=String(Date.now()+30*86400000),nonce=crypto.randomUUID().replace(/-/g,"");
+  const bodypart=["guest",expiry,nonce].join(".");
+  const token=bodypart+"."+await sign(bodypart,env.MAMA_SESSION_SECRET);
+  return json({ok:true,role:"guest"},200,{"Set-Cookie":cookie(token,30*86400)});
+ }
+ if(!sharedPassword(env))return json({error:"家庭记录口令尚未配置"},503);
  const ip=request.headers.get("CF-Connecting-IP")||"unknown";
  const keyhash=Array.from(await digest(env.MAMA_SESSION_SECRET+"|"+ip),x=>x.toString(16).padStart(2,"0")).join("");
  try{
@@ -88,6 +97,7 @@ function validateRecord(body){
 }
 async function recordRecords({request,env},method,role){
  if(!env.MAMA_DB)return json({error:"健康数据存储尚未配置"},503);
+ if(role!=="member")return json({error:"家庭记录需要家庭口令验证"},403);
  if(method==="GET"){
   try{
    const rows=await env.MAMA_DB.prepare("SELECT id,kind,content,created_at FROM mama_health_records ORDER BY created_at DESC LIMIT 100").all();
@@ -105,7 +115,7 @@ async function recordRecords({request,env},method,role){
  }catch{return json({error:"保存失败，请重试"},503);}
 }
 async function realtimeSdp({request,env},role){
- if(role!=="member")return json({error:"请先登录家庭账号"},403);
+ if(!["member","guest"].includes(role))return json({error:"请先进入家庭聊天"},403);
  if(!env.MAMA_QWEN_API_KEY||!env.MAMA_QWEN_WORKSPACE_ID||!env.MAMA_DB)return json({error:"语音接口尚未配置"},503);
  if(!/^[a-zA-Z0-9_-]{6,100}$/.test(env.MAMA_QWEN_WORKSPACE_ID))return json({error:"工作空间设置不正确"},503);
  const offer=await request.text();
@@ -128,7 +138,7 @@ export async function onRequest(context){
  if(path==="auth")return recordAuth(context,method);
  if(!["GET","POST"].includes(method))return json({error:"不支持此请求"},405);
  const role=await identity(request,env);
- if(!role)return json({error:"请先登录家庭页面"},401);
+ if(!role)return json({error:"请先进入家庭聊天"},401);
  if(path==="records")return recordRecords(context,method,role);
  if(path==="sdp"&&method==="POST")return realtimeSdp(context,role);
  return json({error:"没有此接口"},404);

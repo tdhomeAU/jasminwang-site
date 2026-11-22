@@ -23,7 +23,7 @@ test("login fails closed until the shared household password and database are co
 });
 
 test("one shared household password authenticates members with full private access",async()=>{
- const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_MOTHER_PASSWORD:"example-not-a-real-secret"};
+ const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_MOTHER_PASSWORD:"example-not-a-real-secret",MAMA_QWEN_API_KEY:"test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123"};
  const login=await invoke("auth","POST",{password:"example-not-a-real-secret",consent:true},env);
  assert.equal(login.status,200);
  assert.deepEqual(await login.json(),{ok:true,role:"member"});
@@ -32,6 +32,22 @@ test("one shared household password authenticates members with full private acce
  assert.deepEqual(await session.json(),{authenticated:true,role:"member",ready:true});
  const saved=await invoke("records","POST",{kind:"feeling",text:"虚构测试：今天精神不错"},env,cookie);
  assert.equal(saved.status,201);
+});
+
+test("guest can enter voice chat without gaining health-record access",async()=>{
+ const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_QWEN_API_KEY:"test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123"};
+ const missingConsent=await invoke("auth","POST",{action:"guest"},env);
+ assert.equal(missingConsent.status,400);
+ const login=await invoke("auth","POST",{action:"guest",consent:true},env);
+ assert.equal(login.status,200);
+ assert.deepEqual(await login.json(),{ok:true,role:"guest"});
+ const cookie=login.headers.get("Set-Cookie").split(";")[0];
+ const session=await invoke("auth","GET",undefined,env,cookie);
+ assert.deepEqual(await session.json(),{authenticated:true,role:"guest",ready:true});
+ const records=await invoke("records","GET",undefined,env,cookie);
+ assert.equal(records.status,403);
+ const save=await invoke("records","POST",{kind:"feeling",text:"虚构测试"},env,cookie);
+ assert.equal(save.status,403);
 });
 
 test("records cannot be accessed without authenticated signed cookie",async()=>{
