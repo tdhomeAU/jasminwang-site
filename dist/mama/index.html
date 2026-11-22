@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="robots" content="noindex,nofollow,noarchive">
+ <meta name="theme-color" content="#edf7f2">
+ <title>妈妈的健康小伙伴 · 家庭专属测试版</title>
+ <style>
+ :root{color-scheme:light;font-family:system-ui,-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;color:#254438;background:#f5faf7}
+ *{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(180deg,#dff4e9,#f5faf7 300px)}
+ .shell{max-width:750px;margin:auto;padding:24px 16px 64px}.hero{padding:18px 6px 20px;text-align:center}
+ .eyebrow{color:#557766;font-size:14px;letter-spacing:.08em}.hero h1{font-size:clamp(29px,7vw,40px);margin:8px 0;color:#22513d}.hero p{line-height:1.7;font-size:17px;color:#597266;margin:7px 0}
+ .panel{background:white;border:1px solid #e2eee6;border-radius:22px;padding:22px;margin:14px 0;box-shadow:0 7px 22px #27452e0d}
+ h2{font-size:21px;margin:0 0 12px}h3{font-size:18px;margin:0 0 10px}
+ .muted{color:#596d62;line-height:1.75;font-size:16px}.fine{color:#607268;font-size:13px;line-height:1.6}
+ .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1}.big{font-size:22px;font-weight:700}
+ button{border:0;border-radius:15px;cursor:pointer;font:inherit;font-size:17px;padding:14px 19px;min-height:48px;background:#e5f1e9;color:#23513d;font-weight:650}
+ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #3e8565;outline-offset:3px}
+ button.primary{background:#26734f;color:white}button.secondary{background:#eef4f0}
+ button:disabled{opacity:.45;cursor:not-allowed}.wide{width:100%}
+ input,textarea{font:inherit;font-size:18px;line-height:1.5;border-radius:12px;padding:12px;width:100%;border:1px solid #b8d0c0;background:white}
+ label{display:block;margin:12px 0 6px;font-weight:600}.login{max-width:490px;margin:8px auto}
+ .mic{width:174px;height:174px;border-radius:50%;background:#28734f;color:white;display:block;margin:18px auto;font-size:24px;border:8px solid #d8f2e4;box-shadow:0 11px 30px #1f61433b}
+ .mic[aria-busy=true]{background:#af5e39;border-color:#f6e4d8}
+ #status{text-align:center;font-size:18px;min-height:28px;margin:0}
+ .pill{display:inline-flex;border-radius:22px;background:#e4f3e8;color:#2e6245;padding:7px 12px;font-size:14px}
+ .callout{background:#fff8ec;border:1px solid #f2e4c5;border-radius:14px;padding:13px;font-size:15px;line-height:1.75;color:#695235}
+ .record{border-top:1px solid #eef2ee;padding:13px 0;line-height:1.6}.record:first-child{border-top:none}
+ .record small{color:#687a6f;display:block}.pending{background:#fff8e7;border:2px solid #e2c88a;border-radius:16px;padding:17px}
+ .transcript{border-radius:12px;background:#f7faf8;padding:15px;min-height:55px;line-height:1.8;word-wrap:break-word}
+ .error{color:#a12b2b}.success{color:#28734f}.navline{display:flex;justify-content:space-between;align-items:center;gap:10px}
+ [hidden]{display:none!important}
+ @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+ </style>
+</head>
+<body>
+ <main class="shell">
+  <header class="hero">
+   <div class="eyebrow">只属于家人的私人空间</div>
+   <h1>🌿 妈妈的健康小伙伴</h1>
+   <p>聊聊今天的心情，记下每天的小进步。</p>
+   <span class="pill">家庭测试版 · 不代替医生</span>
+  </header>
+  <section id="loginPanel" class="panel login">
+   <h2>欢迎回家</h2>
+   <p class="muted">输入全家共用的口令，就可以开始聊天、查看和确认保存家庭记录。</p>
+   <form id="loginForm">
+    <label for="password">家庭共用口令</label>
+    <input id="password" type="password" autocomplete="current-password" minlength="12" required placeholder="请输入家庭口令">
+    <label style="font-weight:400;display:flex;align-items:flex-start;gap:10px;line-height:1.7;font-size:14px"><input id="consent" type="checkbox" required style="width:22px;height:22px;flex:0 0 22px;margin-top:3px">我知晓家庭成员共用此口令后都能查看和确认保存家庭记录；同意在家庭测试期间将语音交由国内 AI 服务处理，并了解数据位置与隐私配置仍待核查。</label>
+    <button class="primary wide" type="submit" style="margin-top:16px">进入我的小天地</button>
+   </form>
+   <p id="loginMessage" class="fine" role="status"></p>
+  </section>
+  <div id="privateArea" hidden>
+   <div class="navline"><span id="roleText" class="pill"></span><button id="logout" class="secondary" type="button">退出</button></div>
+   <section id="voicePanel" class="panel">
+    <h2>今天想跟我聊聊吗？</h2>
+    <p class="muted">点一下绿色圆钮，就像面对面聊天一样自然说话；结束时再点“结束聊天”。</p>
+    <button id="start" class="mic" type="button">🎙️<br>开始聊天</button>
+    <button id="stop" class="wide secondary" type="button" disabled>结束聊天</button>
+    <p id="status" role="status">还没有开始聊天</p>
+    <audio id="remoteAudio" autoplay playsinline controls style="width:100%;margin-top:10px"></audio>
+    <div class="callout" style="margin-top:12px">系统只会在你确认后保存健康记录。说“确认记录”也可以完成保存。</div>
+   </section>
+   <section id="pendingSection" class="panel" hidden>
+    <h2>帮你记下这一条，好吗？</h2>
+    <div class="pending">
+     <div id="pendingText" class="big"></div>
+     <p class="fine">这是根据语音识别的草稿，可能有错。请核对后再确认，或者直接说“确认记录”“取消记录”。</p>
+     <div class="row"><button id="confirm" type="button" class="primary grow">确认保存</button><button id="discard" class="secondary grow" type="button">不保存</button></div>
+    </div>
+   </section>
+   <section id="wordsSection" class="panel">
+    <h2>刚才聊到了</h2>
+    <div id="conversation" class="transcript muted" aria-live="polite">这里会显示最近的聊天文字，音频不会被网页录制保存。</div>
+   </section>
+   <section class="panel">
+    <div class="navline"><h2>我的健康日记</h2><button id="refresh" class="secondary" type="button">刷新</button></div>
+    <p class="fine">所有数字和用药记录均为本人报告，必须以实际测量和医生医嘱为准。</p>
+    <div id="records" class="muted">还没有记录。</div>
+   </section>
+   <section class="panel" id="manualPanel">
+    <details><summary style="font-size:18px;font-weight:650;cursor:pointer">语音不方便时，也可以手动记一条</summary>
+     <form id="manualForm" style="margin-top:12px">
+      <label for="kind">记录类别</label>
+      <select id="kind" style="font:inherit;padding:12px;width:100%;border-radius:12px">
+       <option value="feeling">今天的感受</option><option value="medication_draft">用药清单（待医生核对）</option>
+       <option value="medication_taken">自报已服药</option><option value="medication_missed">自报漏服或未服药</option>
+       <option value="lipids">血脂检验报告（待核对）</option>
+      </select>
+      <label for="manualText">说说要记录什么</label><textarea id="manualText" rows="3" maxlength="1000" placeholder="只记录事实和实际服药情况"></textarea>
+      <button type="submit" class="primary wide" style="margin-top:12px">先核对，再保存</button>
+     </form>
+    </details>
+   </section>
+  </div>
+  <footer class="fine" style="margin:20px 6px">如出现新发的言语不清、一侧无力、剧烈胸痛或呼吸困难，请立即拨打 120。此工具仅供家庭记录和健康教育，不能判断病情或改变用药。</footer>
+ </main>
+ <script type="module" src="./app.js"></script>
+</body>
+</html>
