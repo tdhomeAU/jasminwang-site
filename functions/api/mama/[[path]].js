@@ -115,6 +115,7 @@ async function recordRecords({request,env},method,role){
  }catch{return json({error:"保存失败，请重试"},503);}
 }
 const MEMORY_KINDS=new Set(["preference","life_story","family_context"]);
+const DAILY_VOICE_CONNECTION_LIMIT=30;
 async function recordMemory({request,env},method,role){
  if(!env.MAMA_DB)return json({error:"陪伴档案存储尚未配置"},503);
  if(role!=="member")return json({error:"陪伴档案需要家庭口令验证"},403);
@@ -155,7 +156,7 @@ async function realtimeSdp({request,env},role){
  try{
   const today=new Date().toISOString().slice(0,10);
   const previous=await env.MAMA_DB.prepare("SELECT count(*) AS n FROM mama_voice_sessions WHERE day=?").bind(today).first();
-  if(Number(previous?.n||0)>=8)return json({error:"今天语音连接次数已达保护上限，请明天再试"},429);
+  if(Number(previous?.n||0)>=DAILY_VOICE_CONNECTION_LIMIT)return json({error:"今天语音连接次数已达保护上限，请明天再试"},429);
   const url=`https://${env.MAMA_QWEN_WORKSPACE_ID}.cn-beijing.maas.aliyuncs.com/api/v1/webrtc/realtime?model=${encodeURIComponent(model)}`;
   const answer=await fetch(url,{method:"POST",headers:{"Authorization":"Bearer "+env.MAMA_QWEN_API_KEY,"Content-Type":"application/sdp"},body:offer,signal:AbortSignal.timeout(25000)});
   if(!answer.ok){console.error("Mama model SDP failed with status",answer.status);return json({error:"语音服务连接失败，请检查配置或稍后重试"},502);}

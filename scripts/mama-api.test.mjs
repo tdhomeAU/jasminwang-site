@@ -115,6 +115,20 @@ test("unsupported realtime model IDs are rejected before contacting the provider
  assert.equal(called,false);
 });
 
+test("daily voice connection guard allows up to 30 successful connections and then blocks",async t=>{
+ const atLimitDb={prepare(){return{bind(){return this;},async first(){return{n:30};},async run(){return{success:true};},async all(){return{results:[]};}};}};
+ const env={MAMA_DB:atLimitDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_QWEN_API_KEY:"server-only-test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123"};
+ const login=await invoke("auth","POST",{action:"guest",consent:true},env);
+ const cookie=login.headers.get("Set-Cookie").split(";")[0];
+ let providerCalled=false;
+ t.mock.method(globalThis,"fetch",async()=>{providerCalled=true;return new Response("unexpected");});
+ const offer="v=0\r\n"+"o=- 123456789 2 IN IP4 127.0.0.1\r\n".repeat(8);
+ const response=await onRequest({request:new Request(base+"/api/mama/sdp",{method:"POST",headers:{Origin:base,Cookie:cookie,"Content-Type":"application/sdp"},body:offer}),env});
+ assert.equal(response.status,429);
+ assert.match((await response.json()).error,/保护上限/);
+ assert.equal(providerCalled,false);
+});
+
 test("cross-origin API posts are rejected",async()=>{
  const response=await onRequest({request:new Request(base+"/api/mama/auth",{
   method:"POST",headers:{Origin:"https://attacker.example","Content-Type":"application/json"},
