@@ -11,14 +11,15 @@ async function sign(data,secret){
  const sig=await crypto.subtle.sign("HMAC",key,enc.encode(data));
  return b64url(String.fromCharCode(...new Uint8Array(sig)));
 }
-function config(env){return Boolean(env.MAMA_DB && env.MAMA_SESSION_SECRET && env.MAMA_MOTHER_PASSWORD && env.MAMA_FAMILY_PASSWORD);}
+function sharedPassword(env){return env.MAMA_SHARED_PASSWORD||env.MAMA_MOTHER_PASSWORD||"";}
+function config(env){return Boolean(env.MAMA_DB && env.MAMA_SESSION_SECRET && sharedPassword(env));}
 async function identity(request,env){
  const raw=(request.headers.get("Cookie")||"").split(";").map(s=>s.trim()).find(s=>s.startsWith("mama_session="))?.slice(13);
  if(!raw||!env.MAMA_SESSION_SECRET||raw.length>400)return null;
  const pieces=raw.split(".");
  if(pieces.length!==4)return null;
  const [role,expiry,nonce,signature]=pieces;
- if(!["mom","family"].includes(role)||!/^\d{13}$/.test(expiry)||!raw||Date.now()>Number(expiry)||!/^[-_A-Za-z0-9]{10,80}$/.test(nonce))return null;
+ if(role!=="member"||!/^\d{13}$/.test(expiry)||!raw||Date.now()>Number(expiry)||!/^[-_A-Za-z0-9]{10,80}$/.test(nonce))return null;
  const expected=await sign([role,expiry,nonce].join("."),env.MAMA_SESSION_SECRET);
  if(!byteEqual(enc.encode(signature),enc.encode(expected)))return null;
  return role;
@@ -48,9 +49,8 @@ async function recordAuth({request,env},method){
   let role=null;
   if(submitted.length>=12&&submitted.length<=180){
    const val=await digest(submitted);
-   const mother=await digest(env.MAMA_MOTHER_PASSWORD);
-   const family=await digest(env.MAMA_FAMILY_PASSWORD);
-   if(byteEqual(val,mother))role="mom";else if(byteEqual(val,family))role="family";
+   const shared=await digest(sharedPassword(env));
+   if(byteEqual(val,shared))role="member";
   }
   if(!role){
    await env.MAMA_DB.prepare("INSERT INTO mama_login_failures(ip_hash,occurred_at) VALUES (?,?)").bind(keyhash,new Date().toISOString()).run();
@@ -94,7 +94,7 @@ async function recordRecords({request,env},method,role){
    return json({records:(rows.results||[]).map(r=>({...r,content:JSON.parse(r.content)}))});
   }catch{return json({error:"记录尚不可读取"},503);}
  }
- if(method!=="POST"||role!=="mom")return json({error:"此账号没有记录权限"},403);
+ if(method!=="POST"||role!=="member")return json({error:"此账号没有记录权限"},403);
  let body;try{body=await getBody(request);}catch{return json({error:"记录格式无效"},400);}
  const payload=validateRecord(body);
  if(!payload)return json({error:"数据需要再次核对"},422);
@@ -105,7 +105,7 @@ async function recordRecords({request,env},method,role){
  }catch{return json({error:"保存失败，请重试"},503);}
 }
 async function realtimeSdp({request,env},role){
- if(role!=="mom")return json({error:"仅妈妈可以启动语音会话"},403);
+ if(role!=="member")return json({error:"请先登录家庭账号"},403);
  if(!env.MAMA_QWEN_API_KEY||!env.MAMA_QWEN_WORKSPACE_ID||!env.MAMA_DB)return json({error:"语音接口尚未配置"},503);
  if(!/^[a-zA-Z0-9_-]{6,100}$/.test(env.MAMA_QWEN_WORKSPACE_ID))return json({error:"工作空间设置不正确"},503);
  const offer=await request.text();

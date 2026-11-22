@@ -18,8 +18,7 @@ async function init(){
 }
 async function showPrivate(userRole){
  role=userRole;el.login.hidden=true;el.private.hidden=false;
- el.role.textContent=role==="mom"?"妈妈的私人聊天空间":"家人只读查看";
- if(role!=="mom"){el.start.disabled=true;el.stop.disabled=true;el.manual.hidden=true;el.pending.hidden=true;$("voicePanel").hidden=true;$("wordsSection").hidden=true;}
+ el.role.textContent="家庭共享空间";
  await refresh();
 }
 $("loginForm").addEventListener("submit",async event=>{
@@ -109,13 +108,13 @@ function proposalFromSpeech(heard){
 }
 function addTranscript(speaker,text){
  const div=document.createElement("div");div.style.padding="6px 0";
- div.textContent=(speaker==="mom"?"妈妈：":"小伙伴：")+text;
+ div.textContent=(speaker==="user"?"你：":"小伙伴：")+text;
  if(el.conversation.textContent.startsWith("这里会显示"))el.conversation.replaceChildren();
  el.conversation.prepend(div);
  while(el.conversation.children.length>8)el.conversation.lastChild.remove();
 }
 function handleSpeech(text){
- addTranscript("mom",text);
+ addTranscript("user",text);
  if(/^(?:好|嗯|好的)?(?:确认记录|确认保存|可以保存|保存吧|就这样保存)/.test(text)&&pending){savePending();return;}
  if(/^(?:取消记录|不要保存|不保存)/.test(text)&&pending){pending=null;el.pending.hidden=true;status("已取消待保存内容。");return;}
  if(pending)return; // Don't silently overwrite an unconfirmed record.
@@ -133,7 +132,7 @@ function stopVoice(message="聊天结束了，明天再来聊也可以。",bad=f
  status(message,bad);
 }
 async function startVoice(){
- if(active||role!=="mom")return;
+ if(active||!role)return;
  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection){status("当前浏览器不支持实时语音，请用最新版手机浏览器。",true);return;}
  el.start.disabled=true;el.stop.disabled=false;el.start.setAttribute("aria-busy","true");status("正在申请麦克风并连接语音…");
  const ctx={peer:new RTCPeerConnection({iceServers:[]}),channels:new Set(),controller:new AbortController(),ready:false,updated:false,created:false,stream:null,channel:null,timeout:null};

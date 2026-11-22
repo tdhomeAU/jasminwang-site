@@ -44,11 +44,11 @@
   </header>
   <section id="loginPanel" class="panel login">
    <h2>欢迎回家</h2>
-   <p class="muted">输入家人给你的专属口令，就可以开始聊天。</p>
+   <p class="muted">输入全家共用的口令，就可以开始聊天、查看和确认保存家庭记录。</p>
    <form id="loginForm">
-    <label for="password">专属口令</label>
-    <input id="password" type="password" autocomplete="current-password" minlength="12" required placeholder="请输入私人口令">
-    <label style="font-weight:400;display:flex;align-items:flex-start;gap:10px;line-height:1.7;font-size:14px"><input id="consent" type="checkbox" required style="width:22px;height:22px;flex:0 0 22px;margin-top:3px">我同意在家庭测试期间将语音交由国内 AI 服务处理，确认后的健康记录存入专属数据库；了解目前需要完成数据库位置与隐私配置检查。</label>
+    <label for="password">家庭共用口令</label>
+    <input id="password" type="password" autocomplete="current-password" minlength="12" required placeholder="请输入家庭口令">
+    <label style="font-weight:400;display:flex;align-items:flex-start;gap:10px;line-height:1.7;font-size:14px"><input id="consent" type="checkbox" required style="width:22px;height:22px;flex:0 0 22px;margin-top:3px">我知晓家庭成员共用此口令后都能查看和确认保存家庭记录；同意在家庭测试期间将语音交由国内 AI 服务处理，并了解数据位置与隐私配置仍待核查。</label>
     <button class="primary wide" type="submit" style="margin-top:16px">进入我的小天地</button>
    </form>
    <p id="loginMessage" class="fine" role="status"></p>
