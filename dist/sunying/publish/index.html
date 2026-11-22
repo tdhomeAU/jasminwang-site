@@ -83,11 +83,11 @@ if(t.shotPlan){
  img.alt="今天的逐秒剪辑分镜图（使用60页真实手册页面）";img.loading="lazy";body.append(img);
  const actions=e("div","editActions");
  const view=e("a","editAction","查看高清分镜图");view.href=t.storyboardUrl;view.target="_blank";view.rel="noopener noreferrer";actions.append(view);
- const clip=e("a","editAction secondary","另存8秒预览视频");clip.href=t.clipUrl;clip.target="_blank";clip.rel="noopener noreferrer";actions.append(clip);body.append(actions);
+ const clip=e("a","editAction secondary","另存8秒原始素材（发布前打码）");clip.href=t.clipUrl;clip.target="_blank";clip.rel="noopener noreferrer";actions.append(clip);body.append(actions);const qrTip=e("p","note","剪辑必做：8.64秒快翻素材里的二维码要完整打马赛克，覆盖边缘并逐帧检查；当天停留的主题页和最后封面也要检查。没有打码完成，不要把原始素材直接发布。");body.append(qrTip);
  const shots=e("div","shotPlan");
  for(const step of t.shotPlan){const line=e("div","shotRow");line.append(e("strong","shotTime",step.time),e("span","shotLabel",step.name),e("span","shotDetail",step.detail));shots.append(line)}
  body.append(shots);
- const flipHeader=e("div","flipLabel","你准备好的8秒快翻素材 · 可在这里播放");
+ const flipHeader=e("div","flipLabel","8秒快翻原始素材（二维码打码后才可发布）");
  const video=e("video","flipPreview");video.src=t.clipUrl;video.controls=true;video.preload="metadata";video.muted=true;video.playsInline=true;
  body.append(flipHeader,video);guide.append(body);article.append(guide);
 }
