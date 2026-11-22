@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
-const el={private:$("privateArea"),recordsLogin:$("recordsLogin"),status:$("status"),start:$("start"),stop:$("stop"),role:$("roleText"),pending:$("pendingSection"),pendingText:$("pendingText"),conversation:$("conversation"),records:$("records"),audio:$("remoteAudio"),manual:$("manualPanel"),consent:$("consent")};
-let role=null,active=null,pending=null,saving=false,audioContext=null;
+const el={private:$("privateArea"),recordsLogin:$("recordsLogin"),status:$("status"),start:$("start"),stop:$("stop"),role:$("roleText"),pending:$("pendingSection"),pendingText:$("pendingText"),conversation:$("conversation"),records:$("records"),audio:$("remoteAudio"),manual:$("manualPanel"),consent:$("consent"),memoryItems:$("memoryItems"),memoryForm:$("memoryForm"),memoryText:$("memoryText"),memoryKind:$("memoryKind"),memoryPreview:$("memoryPreview"),memorySave:$("memorySave"),memoryCancel:$("memoryCancel")};
+let role=null,active=null,pending=null,memoryDraft=null,saving=false,audioContext=null;
 const tz=new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false});
 function status(text,bad=false){el.status.textContent=text;el.status.className=bad?"error":"success";}
 async function api(path,method="GET",body){
@@ -23,6 +23,7 @@ async function showPrivate(userRole){
  role=userRole;el.private.hidden=false;el.recordsLogin.hidden=true;
  el.role.textContent="家庭共享空间";
  await refresh();
+ await refreshMemory();
 }
 $("loginForm").addEventListener("submit",async event=>{
  event.preventDefault();
@@ -36,6 +37,37 @@ $("logout").addEventListener("click",async()=>{
  location.reload();
 });
 $("refresh").addEventListener("click",refresh);
+const memoryLabels={preference:"聊天偏好",life_story:"生活经历",family_context:"家庭信息"};
+async function refreshMemory(){
+ if(!el.memoryItems)return;
+ try{
+  const data=await api("memory");el.memoryItems.replaceChildren();
+  if(!data.items?.length){el.memoryItems.textContent="还没有已确认的陪伴档案。";return;}
+  data.items.forEach(item=>{
+   const card=document.createElement("article");card.className="record";
+   const label=document.createElement("strong");label.textContent=memoryLabels[item.kind]||"家庭档案";
+   const content=document.createElement("div");content.textContent=item.content;
+   const remove=document.createElement("button");remove.type="button";remove.className="secondary";remove.textContent="删除这条";remove.setAttribute("aria-label","删除这条已确认档案");
+   remove.addEventListener("click",async()=>{if(!confirm("删除这条家庭确认的档案吗？"))return;try{await api("memory","DELETE",{id:item.id});await refreshMemory();status("已删除这条档案。");}catch(error){status("删除失败："+error.message,true);}});
+   card.append(label,content,remove);el.memoryItems.append(card);
+  });
+ }catch(error){el.memoryItems.textContent=error.message;}
+}
+function cancelMemoryDraft(){memoryDraft=null;el.memoryPreview.hidden=true;el.memoryCancel.hidden=true;el.memorySave.textContent="检查并确认保存";}
+el.memoryForm?.addEventListener("submit",async event=>{
+ event.preventDefault();
+ if(!memoryDraft){
+  const content=el.memoryText.value.trim();if(!content)return;
+  memoryDraft={kind:el.memoryKind.value,content};
+  el.memoryPreview.textContent="请核对这条内容：［"+(memoryLabels[memoryDraft.kind]||"家庭档案")+"］"+content+"。确认后它会保存在家庭档案中，并在家庭成员发起语音聊天时提供给 AI。";
+  el.memoryPreview.hidden=false;el.memoryCancel.hidden=false;el.memorySave.textContent="确认并保存这条档案";return;
+ }
+ el.memorySave.disabled=true;
+ try{await api("memory","POST",{...memoryDraft,confirmed:true});el.memoryText.value="";cancelMemoryDraft();await refreshMemory();status("已保存这条家庭确认的档案。");}
+ catch(error){status("档案没有保存："+error.message,true);}
+ finally{el.memorySave.disabled=false;}
+});
+el.memoryCancel?.addEventListener("click",cancelMemoryDraft);
 function titleFor(record){
  const c=record.content||{};
  if(record.kind==="vitals")return `血压 ${c.systolic}/${c.diastolic} mmHg${c.pulse?"，心率 "+c.pulse+" 次/分":""}`;
@@ -125,7 +157,7 @@ function handleSpeech(text){
  const candidate=proposalFromSpeech(text);
  if(candidate)showPending(candidate);
 }
-const INSTRUCTIONS="你是妈妈熟悉、亲切的中文聊天伙伴，像家人一样温暖、耐心、有生活气息，不要像客服或机械播报。请用自然普通话，语速舒缓，每次说一两句；妈妈说得慢或停顿时多等一会儿，不要急着接话；她插话时先停下倾听。可以聊家常、心情、睡眠、散步和日常安排，多倾听，少盘问。你是陪伴和自我记录工具，不是医生；不要诊断、解释异常结果为安全、提供药物剂量或建议自行停药或补服。所有药名和服药时间都必须以医生医嘱为准。不能宣称系统已经保存数据；用户说出血压等信息时提醒：请核对记录草稿并说‘确认记录’或者点确认保存。出现新发一侧无力、言语困难、胸痛、呼吸困难等急症迹象，请立即建议拨打中国120。";
+const INSTRUCTIONS="你是郑妈妈亲切、熟悉的中文聊天伙伴，像家人一样温暖自然，不像客服。用普通话简短交谈，每次一两句，直接回应她刚说的内容；不要反复说‘我听得到’‘我一直在’等空话，不要把谈话变成问卷。可以聊家常、心情、睡眠、散步和生活。妈妈说得慢时耐心听完；她插话就停下倾听。只把提供给你的已确认家庭档案当作事实，不要编造家庭情况；没有相关信息时自然地一次问一个问题。你是陪伴和自我记录工具，不是医生；不诊断、不把异常结果说成安全、不提供药物剂量、不建议停药或补服，所有药物以医生医嘱为准。不能说数据已保存；如果识别到血压、心率等记录，提醒她检查草稿并明确确认后才能保存。出现新发一侧无力、言语困难、胸痛、呼吸困难等急症迹象，建议立即拨打中国120。";
 function stopVoice(message="聊天结束了，明天再来聊也可以。",bad=false){
  const ctx=active;if(!ctx)return;active=null;
  clearTimeout(ctx.handshakeTimer);ctx.controller.abort();
@@ -194,16 +226,18 @@ async function startVoice(){
   if(active!==ctx||ctx.updated||!ctx.created||pc.connectionState!=="connected"||ctx.channel?.readyState!=="open")return;
   ctx.updated=true;
   let memory="";
-  try{
-   const result=await api("records");
-   memory=(result.records||[]).filter(r=>["vitals","feeling","medication_taken","medication_missed"].includes(r.kind))
-    .slice(0,5).map(r=>"（"+tz.format(new Date(r.created_at))+"）"+(r.content?.text||"")).join("；").slice(0,1000);
-  }catch{}
+  if(role==="member"){
+   const [recordsResult,profileResult]=await Promise.all([api("records").catch(()=>({records:[]})),api("memory").catch(()=>({items:[]}))]);
+   const records=(recordsResult.records||[]).filter(r=>["vitals","feeling","medication_taken","medication_missed"].includes(r.kind))
+    .slice(0,5).map(r=>"（"+tz.format(new Date(r.created_at))+"）"+(r.content?.text||"")).join("；").slice(0,700);
+   const profile=(profileResult.items||[]).slice(0,8).map(i=>"［"+(memoryLabels[i.kind]||"家庭档案")+"］"+i.content).join("；").slice(0,1000);
+   memory=[records&&"已确认健康日记："+records,profile&&"家人已确认的郑妈妈档案："+profile].filter(Boolean).join("。 ");
+  }
   if(active!==ctx)return;
   sendEvent({type:"session.update",session:{modalities:["text","audio"],audio:{output:{voice:"Tina"}},
    instructions:INSTRUCTIONS+(memory?" 最近的本人确认记录（仅供追问和陪伴，绝不可作诊断）："+memory:""),
    input_audio_transcription:{model:"qwen3-asr-flash-realtime"},
-   turn_detection:{type:"server_vad",silence_duration_ms:3000}}});
+   turn_detection:{type:"server_vad",silence_duration_ms:1600}}});
  }
  pc.ondatachannel=event=>bindChannel(event.channel);
  bindChannel(pc.createDataChannel("oai-events"));

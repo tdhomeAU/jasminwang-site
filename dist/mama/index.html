@@ -51,7 +51,7 @@
   </header>
   <section id="consentPanel" class="panel">
    <h2>第一次聊天前，请看一下</h2>
-   <p class="fine">开始语音前，请确认你同意将语音交给国内 AI 服务处理。数据位置和服务商隐私设置仍待家人核查；测试时请只说虚构信息，不要说真实病历、密码或身份证号码。</p>
+   <p class="fine">开始语音前，请确认你同意将语音交给国内 AI 服务处理。家庭成员登录后，已确认的陪伴档案和健康摘要也会随对话提供给 AI。数据位置和服务商隐私设置仍待家人核查；测试时请只说虚构信息，不要说真实病历、密码或身份证号码。</p>
    <label style="font-weight:400;display:flex;align-items:flex-start;gap:10px;line-height:1.7;font-size:15px"><input id="consent" type="checkbox" style="width:22px;height:22px;flex:0 0 22px;margin-top:3px">我已了解并同意</label>
   </section>
   <section id="voicePanel" class="panel">
@@ -91,6 +91,21 @@
     <div class="navline"><h2>我的健康日记</h2><button id="refresh" class="secondary" type="button">刷新</button></div>
     <p class="fine">所有数字和用药记录均为本人报告，必须以实际测量和医生医嘱为准。</p>
     <div id="records" class="muted">还没有记录。</div>
+   </section>
+   <section class="panel" id="profilePanel">
+    <h2>郑妈妈的小档案</h2>
+    <p class="fine">只添加家人确认过的生活经历、聊天偏好和家庭信息。保存前会再次确认；已确认内容会在家庭成员开始语音时提供给 AI。请继续只用虚构内容测试。</p>
+    <form id="memoryForm">
+     <label for="memoryKind">档案类别</label>
+     <select id="memoryKind" style="font:inherit;padding:12px;width:100%;border-radius:12px">
+      <option value="preference">聊天偏好</option><option value="life_story">生活经历</option><option value="family_context">家庭信息</option>
+     </select>
+     <label for="memoryText">要记住的内容</label>
+     <textarea id="memoryText" rows="3" maxlength="800" placeholder="例如：喜欢聊花草；请一次只问一个问题（虚构测试内容）"></textarea>
+     <p id="memoryPreview" class="callout" hidden></p>
+     <div class="row"><button id="memorySave" class="primary grow" type="submit">检查并确认保存</button><button id="memoryCancel" class="secondary grow" type="button" hidden>取消</button></div>
+    </form>
+    <div id="memoryItems" class="muted" style="margin-top:12px">正在读取档案…</div>
    </section>
    <section class="panel" id="manualPanel">
     <details><summary style="font-size:18px;font-weight:650;cursor:pointer">语音不方便时，也可以手动记一条</summary>

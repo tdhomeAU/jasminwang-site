@@ -114,6 +114,36 @@ async function recordRecords({request,env},method,role){
   return json({ok:true,record:{id,kind:body.kind,content:payload,created_at:now}},201);
  }catch{return json({error:"保存失败，请重试"},503);}
 }
+const MEMORY_KINDS=new Set(["preference","life_story","family_context"]);
+async function recordMemory({request,env},method,role){
+ if(!env.MAMA_DB)return json({error:"陪伴档案存储尚未配置"},503);
+ if(role!=="member")return json({error:"陪伴档案需要家庭口令验证"},403);
+ if(method==="GET"){
+  try{
+   const rows=await env.MAMA_DB.prepare("SELECT id,kind,content,created_at,updated_at FROM mama_companion_memory ORDER BY updated_at DESC LIMIT 100").all();
+   return json({items:rows.results||[]});
+  }catch{return json({error:"陪伴档案尚未就绪"},503);}
+ }
+ let body;try{body=await getBody(request,3000);}catch{return json({error:"档案内容无效"},400);}
+ if(method==="POST"){
+  if(!body||body.confirmed!==true||!MEMORY_KINDS.has(body.kind)||typeof body.content!=="string")return json({error:"请先核对并确认这条档案"},422);
+  const content=body.content.trim();
+  if(!content||content.length>800)return json({error:"档案内容需在 800 字以内"},422);
+  const id=crypto.randomUUID(),now=new Date().toISOString();
+  try{
+   await env.MAMA_DB.prepare("INSERT INTO mama_companion_memory(id,kind,content,created_at,updated_at) VALUES (?,?,?,?,?)").bind(id,body.kind,content,now,now).run();
+   return json({ok:true,item:{id,kind:body.kind,content,created_at:now,updated_at:now}},201);
+  }catch{return json({error:"档案还没有准备好，请稍后重试"},503);}
+ }
+ if(method==="DELETE"){
+  if(!body||typeof body.id!=="string"||body.id.length>80)return json({error:"档案编号无效"},400);
+  try{
+   await env.MAMA_DB.prepare("DELETE FROM mama_companion_memory WHERE id=?").bind(body.id).run();
+   return json({ok:true});
+  }catch{return json({error:"删除失败，请重试"},503);}
+ }
+ return json({error:"不支持此请求"},405);
+}
 async function realtimeSdp({request,env},role){
  if(!["member","guest"].includes(role))return json({error:"请先进入家庭聊天"},403);
  if(!env.MAMA_QWEN_API_KEY||!env.MAMA_QWEN_WORKSPACE_ID||!env.MAMA_DB)return json({error:"语音接口尚未配置"},503);
@@ -138,10 +168,11 @@ export async function onRequest(context){
  const {request,env}=context,method=request.method,path=new URL(request.url).pathname.slice("/api/mama/".length);
  if(!sameOrigin(request))return json({error:"请求来源不允许"},403);
  if(path==="auth")return recordAuth(context,method);
- if(!["GET","POST"].includes(method))return json({error:"不支持此请求"},405);
+ if(!["GET","POST","DELETE"].includes(method))return json({error:"不支持此请求"},405);
  const role=await identity(request,env);
  if(!role)return json({error:"请先进入家庭聊天"},401);
  if(path==="records")return recordRecords(context,method,role);
+ if(path==="memory")return recordMemory(context,method,role);
  if(path==="sdp"&&method==="POST")return realtimeSdp(context,role);
  return json({error:"没有此接口"},404);
 }
