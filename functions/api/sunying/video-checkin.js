@@ -24,6 +24,15 @@ export async function onRequestGet({request,env}){
  const c=await connect(request,env);if(c.error)return c.error;
  const url=new URL(request.url);const day=url.searchParams.get("day");
  if(!validDate(day))return json({error:"日期格式错误"},400);
+ const imageId=url.searchParams.get("image");
+ if(imageId){
+  if(!/^[a-f0-9-]{36}$/.test(imageId))return json({error:"截图编号无效"},400);
+  try{const file=await c.db.prepare("SELECT image_base64,mime FROM sunying_video_uploads WHERE id=? AND room_hash=? AND video_day=?").bind(imageId,c.hash,day).first();
+  if(!file)return json({error:"截图不存在"},404);
+  const raw=atob(file.image_base64);const out=Uint8Array.from(raw,c=>c.charCodeAt(0));
+  return new Response(out,{headers:{"Content-Type":"image/jpeg","Cache-Control":"private,no-store","X-Content-Type-Options":"nosniff"}});
+  }catch(err){console.error("screenshot read",err);return json({error:"截图读取失败"},503)}
+ }
  try{
  const checkin=await c.db.prepare("SELECT video_day,published_at_local,published_by,published_logged_at,updated_at FROM sunying_video_checkins WHERE room_hash=? AND video_day=?").bind(c.hash,day).first();
  const uploads=await c.db.prepare("SELECT id,video_day,screenshot_local,window_label,byte_size,editor,uploaded_at FROM sunying_video_uploads WHERE room_hash=? AND video_day=? ORDER BY uploaded_at DESC LIMIT 12").bind(c.hash,day).all();
