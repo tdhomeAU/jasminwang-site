@@ -36,6 +36,22 @@
 .videoCheckin{margin-top:17px;border:1px solid #dcd0e0;background:linear-gradient(135deg,#fff,#fbf6fc);padding:17px 18px;border-radius:18px}
 .vcTop{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.videoCheckin h4{margin:0;font-size:16px;color:#60476c}.vcStatus{font-size:11px;color:#7d6a84;background:#f1e8f3;padding:5px 9px;border-radius:999px}.vcHelp{font-size:12px;color:#817583;margin:7px 0 12px}.vcStep{border-top:1px solid #eee5ed;padding-top:13px;margin-top:13px}.vcStep h5{margin:0 0 7px;font-size:13px}.vcInputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.vcInput{display:grid;gap:5px;font-size:12px;color:#695871}.vcInput input,.vcInput select{width:100%;min-width:0;border:1px solid #ddd0e0;background:white;border-radius:10px;padding:10px 11px;font:inherit;font-size:13px;color:#4c4150}.vcButtons{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:11px}.vcButton{border:0;background:#72567e;color:#fff;border-radius:10px;padding:10px 13px;font-weight:750;font-size:12px}.vcButton.alt{background:#f0e5f2;color:#65476f}.vcButton:disabled{opacity:.55;cursor:wait}.vcMini{font-size:11px;color:#85788a;margin:6px 0 0}.vcMessage{font-size:12px;color:#5e4871;line-height:1.7;margin-top:10px;white-space:pre-wrap}.vcHistory{display:grid;gap:7px;margin-top:12px}.vcRecord{display:flex;align-items:center;gap:8px;justify-content:space-between;background:#fff;border:1px solid #eee7ef;border-radius:11px;padding:10px 12px;font-size:12px;color:#54465c;flex-wrap:wrap}.vcRecord button{padding:5px 9px;background:#eee4f1;border:0;border-radius:7px;font:inherit;color:#624975}.vcRecord img{max-width:100%;display:block;border-radius:9px;margin-top:10px}.vcRecord .vcPreview{flex-basis:100%;width:100%}.vcPending{color:#a26e5a}.vcGood{color:#3e876b}
 @media(max-width:760px){.videoCheckin{padding:15px 13px}.vcInputs{grid-template-columns:1fr}.vcInput input{font-size:16px}}
+
+/* Task flow v2: three actionable stages, no giant continuous page. */
+.phaseIntro{margin:15px 0 5px;font-size:12px;color:#817585}
+.phaseBox{border:1px solid #e5dfe7;border-radius:17px;margin:12px 0;background:#fff;overflow:hidden}
+.phaseBox[open]{border-color:#d9ccdf;box-shadow:0 7px 22px #6b4f7108}
+.phaseBox>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 17px;min-height:63px;background:#fdfbfc}
+.phaseBox>summary::-webkit-details-marker{display:none}.phaseBox>summary:after{content:"⌄";font-size:22px;color:#927f99;margin-left:auto;line-height:1}
+.phaseBox[open]>summary{border-bottom:1px solid #eee8ef;background:#f8f1fa}
+.phaseBox[open]>summary:after{content:"⌃"}
+.phaseNumber{width:30px;height:30px;background:#e9dfea;border-radius:10px;display:grid;place-items:center;color:#6c4f79;font-weight:800;font-size:13px;flex-shrink:0}
+.phaseTitle{font-size:15px;font-weight:800;color:#4f4158;line-height:1.4}
+.phaseDescription{font-size:11px;color:#938797;margin-top:2px}
+.phaseContents{padding:6px 14px 15px}.phaseContents>.copyArea{margin-top:11px}.phaseContents>.editGuide{margin-top:11px}.phaseContents>.videoCheckin{margin-top:11px}
+.phaseContents>.note{padding:12px 10px;line-height:1.8}
+@media(max-width:760px){.phaseBox>summary{padding:13px 12px}.phaseContents{padding:5px 9px 12px}.phaseTitle{font-size:14px}.phaseNumber{height:28px;width:28px}}
+
 </style>
 </head>
 <body>
@@ -95,7 +111,39 @@ if(t.shotPlan){
  for(const step of t.shotPlan){const line=e("div","shotRow");line.append(e("strong","shotTime",step.time),e("span","shotLabel",step.name),e("span","shotDetail",step.detail));shots.append(line)}
  body.append(shots);guide.append(body);article.append(guide);
 }
-if(t.type==="video")article.append(buildVideoCheckin(t,day));for(const s of t.sections)article.append(contentSection(s));if(t.hint)article.append(e("p","note","小提醒："+t.hint));root.append(article);}}
+if(t.type==="video"){
+ const stage=(number,title,desc,open)=>{
+  const box=e("details","phaseBox");box.open=open;const summary=e("summary");summary.append(e("span","phaseNumber",number));
+  const label=e("div");label.append(e("div","phaseTitle",title),e("div","phaseDescription",desc));summary.append(label);
+  const body=e("div","phaseContents");box.append(summary,body);article.append(box);return body;
+ };
+ const localNow=formatToday;
+ const isToday=localNow===day.date;
+ const isPast=day.date<localNow;
+ article.append(e("p","phaseIntro","按操作顺序找资料 · 点击阶段展开，不再从头翻到底"));
+ const pre=stage("01","发布前 · 准备与拍摄","开头标题、完整口播、剪辑片尾",!isPast);
+ const during=stage("02","发布时 · 复制并登记","视频号短标题、发布描述、保存发布时间",false);
+ const after=stage("03","发布后 · 分享与24小时数据","朋友圈分享、次日截图上传与历史记录",isPast);
+ for(const section of t.sections){
+  const label=section.label||"";
+  const block=contentSection(section);
+  if(label.includes("前3秒")||label.includes("完整口播")||label.includes("编辑说明")||label.includes("提炼依据"))pre.append(block);
+  else if(label.includes("视频号短标题")||label.includes("发布描述"))during.append(block);
+  else if(label.includes("朋友圈"))after.append(block);
+  else pre.append(block);
+ }
+ const guide=article.querySelector(".editGuide");
+ if(guide)pre.append(guide);
+ const checkin=buildVideoCheckin(t,day);
+ const steps=checkin.querySelectorAll(".vcStep");
+ if(steps.length>=2){during.append(steps[0]);}
+ after.append(checkin);
+ if(t.hint)pre.append(e("p","note","内部制作提醒："+t.hint));
+}else{
+ for(const section of t.sections)article.append(contentSection(section));
+ if(t.hint)article.append(e("p","note","小提醒："+t.hint));
+}
+root.append(article);}}
 function renderAll(){progress();renderDays();renderTasks();el("togglePending").textContent=pendingOnly?"查看全部":"只看待完成";el("togglePending").setAttribute("aria-pressed",String(pendingOnly));}
 el("togglePending").addEventListener("click",()=>{pendingOnly=!pendingOnly;renderAll()});
 
