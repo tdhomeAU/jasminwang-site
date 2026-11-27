@@ -43,7 +43,7 @@
 <header class="top"><div class="brand">HER’S · FREEDOM 2027</div><div class="mini"><a href="/sunying/analytics/" style="display:inline-block;padding:8px 12px;border-radius:12px;background:#eee5f1;color:#684e73;font-weight:750;margin-right:10px">📈 数据复盘中心</a>11月23日—29日 · 本周7条健康短视频</div></header>
 <section class="hero" aria-label="发布进度">
 <div><div class="eyebrow">2027 自由女神计划</div><h1>孙颖的每日发布工作台</h1><p>11月23—29日每天一条：复制当天口播、下载当天16.6秒预制片尾，发布后打勾 ✓；旧稿在 Archive</p></div>
-<div class="progressWrap"><div class="ring" id="ring"><span id="percent">0%</span></div><div class="progressText"><strong id="progressCount">0 / 19 已完成</strong><small>每天发布一条，慢慢积累信任。</small></div></div>
+<div class="progressWrap"><div class="ring" id="ring"><span id="percent">0%</span></div><div class="progressText"><strong id="progressCount">0 / 19 已完成</strong><small>本机完成勾选；云端发布和数据打卡在每天视频卡片内。</small></div></div>
 </section>
 <div class="main">
 <aside class="sidebar"><h2>本周发布 · 11/23—11/29</h2><nav id="days" class="days" aria-label="选择发布日期"></nav><a href="/sunying/analytics/" style="display:block;margin:12px 0 14px;padding:14px 15px;background:#f1e8f3;border:1px solid #ddcce1;border-radius:14px;font-size:13px;font-weight:750;color:#62436d">📈 视频数据 · 每周复盘 →</a><details class="archiveBox" id="archiveBox"><summary>🗂 Archive · 历史发布任务 <span>点击查看</span></summary><nav id="archiveDays" class="days archiveDays" aria-label="历史发布日期"></nav><button type="button" id="workshopTab" class="workshopTab" aria-pressed="false">📖 闭门分享 · 两晚框架 <small>互动共创笔记</small></button></details><div class="hintSide"></div></aside>
@@ -57,8 +57,10 @@ const DATA={"days":[{"date":"2026-11-23","day":"23","week":"周一","theme":"每
 const STORAGE_KEY="freedom2027-sunying-publish-v1";
 let completed={};
 try{const read=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");if(read&&typeof read==="object")completed=read;}catch(e){}
-const formatToday=new Intl.DateTimeFormat("en-CA",{timeZone:"Australia/Melbourne",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-let selected=DATA.days.some(d=>d.date===formatToday&&d.date>="2026-11-23"&&d.date<="2026-11-29")?formatToday:"2026-11-23";
+const datePieces=new Intl.DateTimeFormat("en-GB",{timeZone:"Australia/Melbourne",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+const dateParts=Object.fromEntries(datePieces.filter(p=>p.type!=="literal").map(p=>[p.type,p.value]));
+const formatToday=dateParts.year+"-"+dateParts.month+"-"+dateParts.day;
+let selected=DATA.days.some(d=>d.date===formatToday&&d.date>="2026-11-23"&&d.date<="2026-11-29")?formatToday:(formatToday>"2026-11-29"?"2026-11-29":"2026-11-23");
 let pendingOnly=false;
 const ACTIVE_DAYS=DATA.days.filter(d=>d.date>="2026-11-23"&&d.date<="2026-11-29");
 const allTasks=ACTIVE_DAYS.flatMap(day=>day.tasks);
@@ -95,7 +97,7 @@ if(t.shotPlan){
 }
 if(t.type==="video")article.append(buildVideoCheckin(t,day));for(const s of t.sections)article.append(contentSection(s));if(t.hint)article.append(e("p","note","小提醒："+t.hint));root.append(article);}}
 function renderAll(){progress();renderDays();renderTasks();el("togglePending").textContent=pendingOnly?"查看全部":"只看待完成";el("togglePending").setAttribute("aria-pressed",String(pendingOnly));}
-el("togglePending").addEventListener("click",()=>{pendingOnly=!pendingOnly;renderAll()});renderAll();
+el("togglePending").addEventListener("click",()=>{pendingOnly=!pendingOnly;renderAll()});
 
 
 /* Shared daily video check-in. Cloud timestamps always come from the server.
@@ -323,5 +325,8 @@ async function saveWorkshopNote(key){
  el("workshopTab").addEventListener("click",()=>{showWorkshop();window.scrollTo({top:0,behavior:"auto"})});
  if(hashValue)showWorkshop();
 })();
+
+// Render only after all shared upload and workshop declarations are initialized.
+renderAll();
 
 </script></body></html>
