@@ -6,6 +6,7 @@ const json=(obj,status=200)=>new Response(JSON.stringify(obj),{status,headers});
 const validDate=s=>typeof s==="string"&&/^20(?:2[6-9]|3[0-2])-[01][0-9]-[0-3][0-9]$/.test(s)&&!Number.isNaN(Date.parse(s+"T00:00:00Z"));
 const validLocal=s=>typeof s==="string"&&/^20\d\d-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d$/.test(s)&&!Number.isNaN(Date.parse(s));
 const schema1="CREATE TABLE IF NOT EXISTS sunying_video_checkins (room_hash TEXT NOT NULL, video_day TEXT NOT NULL, published_at_local TEXT, published_by TEXT, published_logged_at TEXT, updated_at TEXT NOT NULL, PRIMARY KEY(room_hash,video_day))";
+const schema3="CREATE TABLE IF NOT EXISTS sunying_video_duration (room_hash TEXT NOT NULL, video_day TEXT NOT NULL, duration_seconds INTEGER NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(room_hash,video_day))";
 const schema2="CREATE TABLE IF NOT EXISTS sunying_video_uploads (id TEXT PRIMARY KEY, room_hash TEXT NOT NULL, video_day TEXT NOT NULL, screenshot_local TEXT NOT NULL, window_label TEXT NOT NULL, mime TEXT NOT NULL, image_base64 TEXT NOT NULL, byte_size INTEGER NOT NULL, editor TEXT NOT NULL, uploaded_at TEXT NOT NULL)";
 const hashToken=async request=>{
  const token=request.headers.get("Authorization")||"";
@@ -16,7 +17,7 @@ const hashToken=async request=>{
 async function connect(request,env){
  if(!env.FREEDOM_DB)return {error:json({error:"尚未配置 FREEDOM_DB，上传暂不可用"},503)};
  const hash=await hashToken(request);if(!hash)return {error:json({error:"请通过专属团队链接打开后上传"},401)};
- try{await env.FREEDOM_DB.prepare(schema1).run();await env.FREEDOM_DB.prepare(schema2).run();return {hash,db:env.FREEDOM_DB}}
+ try{await env.FREEDOM_DB.prepare(schema1).run();await env.FREEDOM_DB.prepare(schema2).run();await env.FREEDOM_DB.prepare(schema3).run();return {hash,db:env.FREEDOM_DB}}
  catch(err){console.error("video checkin schema",err);return {error:json({error:"数据存储暂时不可用"},503)}}
 }
 const publicRow=r=>r&&({date:r.video_day,published_at_local:r.published_at_local,published_by:r.published_by,published_logged_at:r.published_logged_at,updated_at:r.updated_at});
@@ -35,8 +36,9 @@ export async function onRequestGet({request,env}){
  }
  try{
  const checkin=await c.db.prepare("SELECT video_day,published_at_local,published_by,published_logged_at,updated_at FROM sunying_video_checkins WHERE room_hash=? AND video_day=?").bind(c.hash,day).first();
+ const duration=await c.db.prepare("SELECT duration_seconds FROM sunying_video_duration WHERE room_hash=? AND video_day=?").bind(c.hash,day).first();
  const uploads=await c.db.prepare("SELECT id,video_day,screenshot_local,window_label,byte_size,editor,uploaded_at FROM sunying_video_uploads WHERE room_hash=? AND video_day=? ORDER BY uploaded_at DESC LIMIT 12").bind(c.hash,day).all();
- return json({ok:true,checkin:publicRow(checkin),uploads:uploads.results||[]});
+ return json({ok:true,checkin:publicRow(checkin),duration_seconds:duration?.duration_seconds??null,uploads:uploads.results||[]});
  }catch(err){console.error("video checkin read",err);return json({error:"读取失败，请重试"},503)}
 }
 export async function onRequestPost({request,env}){
@@ -50,6 +52,9 @@ export async function onRequestPost({request,env}){
  if(data.action==="publish"){
   const published=typeof data.published_at_local==="string"?data.published_at_local:"";
   if(!validLocal(published)||published.slice(0,10)!==day)return json({error:"请填写该视频实际发布的墨尔本日期和时间"},400);
+  const duration=Number(data.duration_seconds);
+  if(!Number.isInteger(duration)||duration<1||duration>7200)return json({error:"请填写最终视频时长，例如1:22"},400);
+  await c.db.prepare("INSERT INTO sunying_video_duration(room_hash,video_day,duration_seconds,updated_at) VALUES(?,?,?,?) ON CONFLICT(room_hash,video_day) DO UPDATE SET duration_seconds=excluded.duration_seconds,updated_at=excluded.updated_at").bind(c.hash,day,duration,now).run();
   await c.db.prepare("INSERT INTO sunying_video_checkins(room_hash,video_day,published_at_local,published_by,published_logged_at,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(room_hash,video_day) DO UPDATE SET published_at_local=excluded.published_at_local,published_by=excluded.published_by,updated_at=excluded.updated_at").bind(c.hash,day,published,editor,now,now).run();
   return json({ok:true,action:"publish",published_at_local:published,recorded_at:now});
  }
