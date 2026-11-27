@@ -51,7 +51,7 @@
   </header>
   <section id="consentPanel" class="panel">
    <h2>第一次聊天前，请看一下</h2>
-   <p class="fine">开始语音前，请确认你同意将语音交给国内 AI 服务处理。家庭成员登录后，已确认的陪伴档案和健康摘要也会随对话提供给 AI。数据位置和服务商隐私设置仍待家人核查；测试时请只说虚构信息，不要说真实病历、密码或身份证号码。</p>
+   <p class="fine">开始语音前，请确认你同意将语音交给国内 AI 服务处理。登录家庭空间后，你说的话的识别文字会自动保存在家庭资料库，供家人查看和今后聊天参考；访客聊天不存档。数据位置和服务商隐私设置仍待家人核查；测试时请只说虚构信息，不要说真实病历、密码或身份证号码。</p>
    <label style="font-weight:400;display:flex;align-items:flex-start;gap:10px;line-height:1.7;font-size:15px"><input id="consent" type="checkbox" style="width:22px;height:22px;flex:0 0 22px;margin-top:3px">我已了解并同意</label>
   </section>
   <section id="voicePanel" class="panel">
@@ -68,17 +68,26 @@
    <div id="conversation" class="transcript muted" data-empty="true" aria-live="polite">最近的对话文字会显示在这里；刷新页面后清空。</div>
   </section>
   <details id="recordsLogin" class="panel">
-   <summary style="font-size:18px;font-weight:650;cursor:pointer">家庭健康日记（需要家庭口令）</summary>
-   <p class="fine">聊天不需要登录。查看或保存家庭健康记录时，仍需验证家庭口令。</p>
+   <summary style="font-size:18px;font-weight:650;cursor:pointer">郑妈妈资料库（家庭口令）</summary>
+   <p class="fine">家庭口令用于查看、删除聊天归档和管理健康资料。登录后，妈妈的语音识别文字会自动归档；访客语音不会保存。</p>
    <form id="loginForm">
     <label for="password">家庭共用口令（至少 12 个字符）</label>
     <input id="password" type="password" autocomplete="current-password" minlength="12" required placeholder="请输入家庭口令">
-    <button class="primary wide" type="submit" style="margin-top:12px">打开家庭日记</button>
+    <button class="primary wide" type="submit" style="margin-top:12px">打开郑妈妈资料库</button>
    </form>
    <p id="loginMessage" class="fine" role="status"></p>
   </details>
   <div id="privateArea" hidden>
    <div class="navline"><span id="roleText" class="pill">家庭共享空间</span><button id="logout" class="secondary" type="button">退出家庭日记</button></div>
+   <section class="panel" id="documentUploadPanel">
+    <h2>医院文件</h2>
+    <p class="fine">Google Drive 还没有接入这个测试页，暂时不能在这里上传或让 AI 读取医院文件。请先不要把真实病历放到测试环境；接入完成后，我会把上传入口放在这里。</p>
+   </section>
+   <section class="panel" id="chatArchivePanel">
+    <div class="navline"><h2>妈妈说过的话</h2><button id="refreshArchive" class="secondary" type="button">刷新</button></div>
+    <p class="fine">家庭成员登录后，语音识别出的妈妈原话会自动归档，并标注时间。不会保存录音或 AI 回复；识别可能有误，可以删除不准确的内容。</p>
+    <div id="chatArchiveItems" class="muted">还没有聊天归档。</div>
+   </section>
    <section id="pendingSection" class="panel" hidden>
     <h2>帮你记下这一条，好吗？</h2>
     <div class="pending">
@@ -88,7 +97,7 @@
     </div>
    </section>
    <section class="panel">
-    <div class="navline"><h2>我的健康日记</h2><button id="refresh" class="secondary" type="button">刷新</button></div>
+    <div class="navline"><h2>已确认的健康记录</h2><button id="refresh" class="secondary" type="button">刷新</button></div>
     <p class="fine">所有数字和用药记录均为本人报告，必须以实际测量和医生医嘱为准。</p>
     <div id="records" class="muted">还没有记录。</div>
    </section>

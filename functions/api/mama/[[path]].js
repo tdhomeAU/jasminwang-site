@@ -114,6 +114,35 @@ async function recordRecords({request,env},method,role){
   return json({ok:true,record:{id,kind:body.kind,content:payload,created_at:now}},201);
  }catch{return json({error:"保存失败，请重试"},503);}
 }
+async function recordChatArchive({request,env},method,role){
+ if(!env.MAMA_DB)return json({error:"聊天资料库尚未配置"},503);
+ if(role!=="member")return json({error:"聊天归档需要家庭口令验证",archive:false},403);
+ if(method==="GET"){
+  try{
+   const rows=await env.MAMA_DB.prepare("SELECT id,content,created_at FROM mama_chat_archive ORDER BY created_at DESC LIMIT 100").all();
+   return json({items:rows.results||[]});
+  }catch{return json({error:"聊天资料库尚未就绪"},503);}
+ }
+ let body;try{body=await getBody(request,2500);}catch{return json({error:"聊天内容格式无效"},400);}
+ if(method==="POST"){
+  if(!body||typeof body.text!=="string")return json({error:"聊天内容无效"},422);
+  const content=body.text.trim();
+  if(!content||content.length>2000)return json({error:"单条聊天内容需在 2000 字以内"},422);
+  const id=crypto.randomUUID(),now=new Date().toISOString();
+  try{
+   await env.MAMA_DB.prepare("INSERT INTO mama_chat_archive(id,content,source,created_at) VALUES (?,?,?,?)").bind(id,content,"mama_voice_transcript",now).run();
+   return json({ok:true,item:{id,content,source:"mama_voice_transcript",created_at:now}},201);
+  }catch{return json({error:"聊天内容暂时没有存好"},503);}
+ }
+ if(method==="DELETE"){
+  if(!body||typeof body.id!=="string"||body.id.length>80)return json({error:"聊天记录编号无效"},400);
+  try{
+   await env.MAMA_DB.prepare("DELETE FROM mama_chat_archive WHERE id=?").bind(body.id).run();
+   return json({ok:true});
+  }catch{return json({error:"删除失败，请重试"},503);}
+ }
+ return json({error:"不支持此请求"},405);
+}
 const MEMORY_KINDS=new Set(["preference","life_story","family_context"]);
 const DAILY_VOICE_CONNECTION_LIMIT=30;
 async function recordMemory({request,env},method,role){
@@ -173,6 +202,7 @@ export async function onRequest(context){
  const role=await identity(request,env);
  if(!role)return json({error:"请先进入家庭聊天"},401);
  if(path==="records")return recordRecords(context,method,role);
+ if(path==="archive")return recordChatArchive(context,method,role);
  if(path==="memory")return recordMemory(context,method,role);
  if(path==="sdp"&&method==="POST")return realtimeSdp(context,role);
  return json({error:"没有此接口"},404);

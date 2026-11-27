@@ -1,5 +1,5 @@
 const $=id=>document.getElementById(id);
-const el={private:$("privateArea"),recordsLogin:$("recordsLogin"),status:$("status"),start:$("start"),stop:$("stop"),role:$("roleText"),pending:$("pendingSection"),pendingText:$("pendingText"),conversation:$("conversation"),records:$("records"),audio:$("remoteAudio"),manual:$("manualPanel"),consent:$("consent"),memoryItems:$("memoryItems"),memoryForm:$("memoryForm"),memoryText:$("memoryText"),memoryKind:$("memoryKind"),memoryPreview:$("memoryPreview"),memorySave:$("memorySave"),memoryCancel:$("memoryCancel")};
+const el={private:$("privateArea"),recordsLogin:$("recordsLogin"),status:$("status"),start:$("start"),stop:$("stop"),role:$("roleText"),pending:$("pendingSection"),pendingText:$("pendingText"),conversation:$("conversation"),records:$("records"),audio:$("remoteAudio"),manual:$("manualPanel"),consent:$("consent"),memoryItems:$("memoryItems"),memoryForm:$("memoryForm"),memoryText:$("memoryText"),memoryKind:$("memoryKind"),memoryPreview:$("memoryPreview"),memorySave:$("memorySave"),memoryCancel:$("memoryCancel"),chatArchiveItems:$("chatArchiveItems")};
 let role=null,active=null,pending=null,memoryDraft=null,saving=false,audioContext=null;
 const tz=new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false});
 function status(text,bad=false){el.status.textContent=text;el.status.className=bad?"error":"success";}
@@ -12,7 +12,7 @@ async function api(path,method="GET",body){
  return data;
 }
 async function init(){
- try{el.consent.checked=localStorage.getItem("mama_voice_consent_v1")==="yes";}catch{}
+ try{el.consent.checked=localStorage.getItem("mama_voice_consent_v2")==="yes";}catch{}
  try{const session=await api("auth");
   if(session.authenticated&&session.role==="member")await showPrivate(session.role);
   else if(session.authenticated&&session.role==="guest"){role="guest";el.consent.checked=true;}
@@ -24,6 +24,7 @@ async function showPrivate(userRole){
  el.role.textContent="家庭共享空间";
  await refresh();
  await refreshMemory();
+ await refreshArchive();
 }
 $("loginForm").addEventListener("submit",async event=>{
  event.preventDefault();
@@ -37,6 +38,22 @@ $("logout").addEventListener("click",async()=>{
  location.reload();
 });
 $("refresh").addEventListener("click",refresh);
+$("refreshArchive")?.addEventListener("click",refreshArchive);
+async function refreshArchive(){
+ if(!el.chatArchiveItems)return;
+ try{
+  const data=await api("archive");el.chatArchiveItems.replaceChildren();
+  if(!data.items?.length){el.chatArchiveItems.textContent="还没有聊天归档。登录后妈妈说的话会自动存到这里。";return;}
+  data.items.forEach(item=>{
+   const card=document.createElement("article");card.className="record";
+   const stamp=document.createElement("small");stamp.textContent=tz.format(new Date(item.created_at))+"（北京时间） · 妈妈口述（语音识别文字）";
+   const content=document.createElement("div");content.textContent=item.content;
+   const remove=document.createElement("button");remove.type="button";remove.className="secondary";remove.textContent="删除这句话";
+   remove.addEventListener("click",async()=>{if(!confirm("从家庭资料库删除这句话吗？"))return;try{await api("archive","DELETE",{id:item.id});await refreshArchive();}catch(error){status("删除失败："+error.message,true);}});
+   card.append(stamp,content,remove);el.chatArchiveItems.append(card);
+  });
+ }catch(error){el.chatArchiveItems.textContent=error.message;}
+}
 const memoryLabels={preference:"聊天偏好",life_story:"生活经历",family_context:"家庭信息"};
 async function refreshMemory(){
  if(!el.memoryItems)return;
@@ -154,6 +171,11 @@ function handleSpeech(text){
  if(/^(?:好|嗯|好的)?(?:确认记录|确认保存|可以保存|保存吧|就这样保存)/.test(text)&&pending){savePending();return;}
  if(/^(?:取消记录|不要保存|不保存)/.test(text)&&pending){pending=null;el.pending.hidden=true;status("已取消待保存内容。");return;}
  if(pending)return; // Don't silently overwrite an unconfirmed record.
+ // Save only recognized words in a family-member session, never raw audio.
+ api("archive","POST",{text}).then(()=>refreshArchive()).catch(error=>{
+  console.warn("Mama speech archive unavailable",error.message);
+  status("刚才这句话没有存进资料库，请稍后刷新再检查。",true);
+ });
  const candidate=proposalFromSpeech(text);
  if(candidate)showPending(candidate);
 }
@@ -181,10 +203,10 @@ async function startVoice(){
   }
  }catch(error){console.info("Web Audio output unlock unavailable",error?.name);}
  if(!role){
-  try{const session=await api("auth","POST",{action:"guest",consent:true});role=session.role;try{localStorage.setItem("mama_voice_consent_v1","yes");}catch{}}
+  try{const session=await api("auth","POST",{action:"guest",consent:true});role=session.role;try{localStorage.setItem("mama_voice_consent_v2","yes");}catch{}}
   catch(error){status("暂时不能开始聊天："+error.message,true);return;}
  }
- try{localStorage.setItem("mama_voice_consent_v1","yes");}catch{}
+ try{localStorage.setItem("mama_voice_consent_v2","yes");}catch{}
  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection){status("当前浏览器不支持实时语音，请用最新版手机浏览器。",true);return;}
  el.start.disabled=true;el.stop.disabled=false;el.start.setAttribute("aria-busy","true");status("正在申请麦克风并连接语音…");
   const ctx={peer:new RTCPeerConnection({iceServers:[]}),channels:new Set(),controller:new AbortController(),ready:false,updated:false,created:false,stream:null,channel:null,timeout:null,audioUnlock};
@@ -227,11 +249,12 @@ async function startVoice(){
   ctx.updated=true;
   let memory="";
   if(role==="member"){
-   const [recordsResult,profileResult]=await Promise.all([api("records").catch(()=>({records:[]})),api("memory").catch(()=>({items:[]}))]);
+   const [recordsResult,profileResult,archiveResult]=await Promise.all([api("records").catch(()=>({records:[]})),api("memory").catch(()=>({items:[]})),api("archive").catch(()=>({items:[]}))]);
    const records=(recordsResult.records||[]).filter(r=>["vitals","feeling","medication_taken","medication_missed"].includes(r.kind))
     .slice(0,5).map(r=>"（"+tz.format(new Date(r.created_at))+"）"+(r.content?.text||"")).join("；").slice(0,700);
    const profile=(profileResult.items||[]).slice(0,8).map(i=>"［"+(memoryLabels[i.kind]||"家庭档案")+"］"+i.content).join("；").slice(0,1000);
-   memory=[records&&"已确认健康日记："+records,profile&&"家人已确认的郑妈妈档案："+profile].filter(Boolean).join("。 ");
+   const archive=(archiveResult.items||[]).slice(0,8).map(i=>"［妈妈口述，"+tz.format(new Date(i.created_at))+"］"+i.content).join("；").slice(0,1200);
+   memory=[records&&"已确认健康日记（本人自述，不是医生诊断）："+records,profile&&"家人已确认的郑妈妈档案："+profile,archive&&"最近聊天中的妈妈原话（语音识别可能有误，只作理解上下文，不作为已核实医疗事实）："+archive].filter(Boolean).join("。 ");
   }
   if(active!==ctx)return;
   sendEvent({type:"session.update",session:{modalities:["text","audio"],audio:{output:{voice:"Tina"}},

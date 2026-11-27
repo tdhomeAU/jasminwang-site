@@ -52,6 +52,8 @@ test("guest can enter voice chat without gaining health-record access",async()=>
  assert.equal(memory.status,403);
  const saveMemory=await invoke("memory","POST",{kind:"preference",content:"虚构资料",confirmed:true},env,cookie);
  assert.equal(saveMemory.status,403);
+ const archive=await invoke("archive","POST",{text:"虚构的妈妈口述"},env,cookie);
+ assert.equal(archive.status,403);
 });
 
 test("only a family member can save confirmed companion memory",async()=>{
@@ -69,6 +71,21 @@ test("only a family member can save confirmed companion memory",async()=>{
  assert.equal(deleted.status,200);
  const invalid=await invoke("memory","POST",null,env,cookie);
  assert.equal(invalid.status,422);
+});
+
+test("family chat archive stores only recognized text and supports deletion",async()=>{
+ const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_MOTHER_PASSWORD:"example-not-a-real-secret",MAMA_QWEN_API_KEY:"test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123"};
+ const login=await invoke("auth","POST",{password:"example-not-a-real-secret"},env);
+ const cookie=login.headers.get("Set-Cookie").split(";")[0];
+ const saved=await invoke("archive","POST",{text:"虚构测试：我喜欢在阳台养花"},env,cookie);
+ assert.equal(saved.status,201);
+ assert.equal((await saved.json()).item.source,"mama_voice_transcript");
+ const listed=await invoke("archive","GET",undefined,env,cookie);
+ assert.equal(listed.status,200);
+ const deleted=await invoke("archive","DELETE",{id:"fake-archive-id"},env,cookie);
+ assert.equal(deleted.status,200);
+ const tooLong=await invoke("archive","POST",{text:"字".repeat(2001)},env,cookie);
+ assert.equal(tooLong.status,422);
 });
 
 test("records cannot be accessed without authenticated signed cookie",async()=>{
