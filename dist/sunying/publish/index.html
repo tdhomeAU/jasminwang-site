@@ -31,6 +31,11 @@
 .shotRow{display:grid;grid-template-columns:88px minmax(105px,.8fr) minmax(150px,1.5fr);gap:12px;align-items:center;padding:10px 12px;border-top:1px solid #efeaf0;font-size:13px}
 .shotRow:first-child{border-top:0}.shotTime{white-space:nowrap;color:#6b4771;font-size:12px}.shotLabel{font-weight:700}.shotDetail{color:#726775}
 @media(max-width:760px){.shotRow{grid-template-columns:78px 1fr;gap:3px 9px}.shotDetail{grid-column:2}.editGuideTitle{font-size:14px}.editPreview{max-width:100%}}
+
+/* Each daily video now has its own cloud-backed publishing + D+1 screenshot log. */
+.videoCheckin{margin-top:17px;border:1px solid #dcd0e0;background:linear-gradient(135deg,#fff,#fbf6fc);padding:17px 18px;border-radius:18px}
+.vcTop{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.videoCheckin h4{margin:0;font-size:16px;color:#60476c}.vcStatus{font-size:11px;color:#7d6a84;background:#f1e8f3;padding:5px 9px;border-radius:999px}.vcHelp{font-size:12px;color:#817583;margin:7px 0 12px}.vcStep{border-top:1px solid #eee5ed;padding-top:13px;margin-top:13px}.vcStep h5{margin:0 0 7px;font-size:13px}.vcInputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.vcInput{display:grid;gap:5px;font-size:12px;color:#695871}.vcInput input,.vcInput select{width:100%;min-width:0;border:1px solid #ddd0e0;background:white;border-radius:10px;padding:10px 11px;font:inherit;font-size:13px;color:#4c4150}.vcButtons{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:11px}.vcButton{border:0;background:#72567e;color:#fff;border-radius:10px;padding:10px 13px;font-weight:750;font-size:12px}.vcButton.alt{background:#f0e5f2;color:#65476f}.vcButton:disabled{opacity:.55;cursor:wait}.vcMini{font-size:11px;color:#85788a;margin:6px 0 0}.vcMessage{font-size:12px;color:#5e4871;line-height:1.7;margin-top:10px;white-space:pre-wrap}.vcHistory{display:grid;gap:7px;margin-top:12px}.vcRecord{display:flex;align-items:center;gap:8px;justify-content:space-between;background:#fff;border:1px solid #eee7ef;border-radius:11px;padding:10px 12px;font-size:12px;color:#54465c;flex-wrap:wrap}.vcRecord button{padding:5px 9px;background:#eee4f1;border:0;border-radius:7px;font:inherit;color:#624975}.vcRecord img{max-width:100%;display:block;border-radius:9px;margin-top:10px}.vcRecord .vcPreview{flex-basis:100%;width:100%}.vcPending{color:#a26e5a}.vcGood{color:#3e876b}
+@media(max-width:760px){.videoCheckin{padding:15px 13px}.vcInputs{grid-template-columns:1fr}.vcInput input{font-size:16px}}
 </style>
 </head>
 <body>
@@ -88,9 +93,135 @@ if(t.shotPlan){
  for(const step of t.shotPlan){const line=e("div","shotRow");line.append(e("strong","shotTime",step.time),e("span","shotLabel",step.name),e("span","shotDetail",step.detail));shots.append(line)}
  body.append(shots);guide.append(body);article.append(guide);
 }
-for(const s of t.sections)article.append(contentSection(s));if(t.hint)article.append(e("p","note","小提醒："+t.hint));root.append(article);}}
+if(t.type==="video")article.append(buildVideoCheckin(t,day));for(const s of t.sections)article.append(contentSection(s));if(t.hint)article.append(e("p","note","小提醒："+t.hint));root.append(article);}}
 function renderAll(){progress();renderDays();renderTasks();el("togglePending").textContent=pendingOnly?"查看全部":"只看待完成";el("togglePending").setAttribute("aria-pressed",String(pendingOnly));}
 el("togglePending").addEventListener("click",()=>{pendingOnly=!pendingOnly;renderAll()});renderAll();
+
+
+/* Shared daily video check-in. Cloud timestamps always come from the server.
+   The existing task checkbox remains unchanged; this card is the shared audit trail. */
+const videoCheckinApi="/api/sunying/video-checkin";
+function melbNowLocal(){
+ const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Australia/Melbourne",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
+ const obj=Object.fromEntries(parts.filter(p=>p.type!=="literal").map(p=>[p.type,p.value]));
+ return obj.year+"-"+obj.month+"-"+obj.day+"T"+obj.hour+":"+obj.minute;
+}
+async function videoRequest(day,options){
+ if(!workshopToken||!/.{32}/.test(workshopToken))throw Error("团队链接尚未准备好");
+ const url=videoCheckinApi+"?day="+encodeURIComponent(day);
+ const response=await fetch(url,{...options,headers:{"Authorization":"Bearer "+workshopToken,...(options&&options.headers||{})},cache:"no-store"});
+ const data=await response.json().catch(()=>({error:"服务器返回格式异常"}));
+ if(!response.ok||!data.ok)throw Error(data.error||"数据接口暂时不可用");
+ return data;
+}
+function vcText(tag,cls,text){return e(tag,cls,text)}
+function vcLabel(label,type,value){
+ const outer=vcText("label","vcInput");outer.append(vcText("span","",label));
+ const input=document.createElement("input");input.type=type;if(value)input.value=value;outer.append(input);return {outer,input};
+}
+function buildVideoCheckin(task,day){
+ const root=vcText("section","videoCheckin");root.dataset.videoDay=day.date;
+ const top=vcText("div","vcTop");top.append(vcText("h4","","📈 今天发布，明天上传数据"));const badge=vcText("span","vcStatus","正在读取…");top.append(badge);root.append(top);
+ root.append(vcText("p","vcHelp","这条视频当天完成发布后登记实际发布时间；第二天打开同一日期，上传约24小时的后台截图。上传成功会自动打数据卡，并记录真正的上传时刻。"));
+ const nameArea=vcLabel("记录人（例如：孙颖）","text",readStorage(NOTES_EDITOR_KEY,""));nameArea.input.maxLength=36;nameArea.input.placeholder="孙颖";
+ const pubArea=vcLabel("① 视频实际发布时间 · 墨尔本时间","datetime-local","");
+ pubArea.input.min=day.date+"T00:00";pubArea.input.max=day.date+"T23:59";
+ const pubStep=vcText("div","vcStep");pubStep.append(vcText("h5","","第一步 · 发布当日"));
+ const pubInputs=vcText("div","vcInputs");pubInputs.append(nameArea.outer,pubArea.outer);pubStep.append(pubInputs);
+ const pubButtons=vcText("div","vcButtons"),publish=vcText("button","vcButton","✓ 已发布 · 保存发布时间");publish.type="button";
+ pubButtons.append(publish);pubStep.append(pubButtons);
+ const pubNote=vcText("p","vcMini","这是团队共享记录；原来的“完成打勾”仍可照常使用。");pubStep.append(pubNote);root.append(pubStep);
+ const shotStep=vcText("div","vcStep");shotStep.append(vcText("h5","","第二步 · 次日约24小时上传截图"));
+ const timeArea=vcLabel("后台截图实际采集时间 · 墨尔本时间","datetime-local",melbNowLocal());
+ const fileArea=vcLabel("选择视频号后台截图（自动压缩为JPEG）","file");fileArea.input.accept="image/png,image/jpeg,image/webp,image/*";fileArea.input.multiple=false;
+ const inputs=vcText("div","vcInputs");inputs.append(timeArea.outer,fileArea.outer);shotStep.append(inputs);
+ const winLabel=vcText("label","vcInput","截图观察窗口");
+ const select=document.createElement("select");
+ [["24h","发布后约24小时"],["72h","发布后约72小时"],["7d","发布后约7天"],["other","其他时间"]].forEach(([v,t])=>{const op=document.createElement("option");op.value=v;op.textContent=t;select.append(op)});
+ winLabel.append(select);shotStep.append(winLabel);
+ const shotButtons=vcText("div","vcButtons"),upload=vcText("button","vcButton","↑ 上传截图并打卡"),refresh=vcText("button","vcButton alt","↻ 刷新共享记录");upload.type="button";refresh.type="button";
+ shotButtons.append(upload,refresh);shotStep.append(shotButtons);
+ shotStep.append(vcText("p","vcMini","系统记录服务器收到文件的准确时间；截图采集时间由孙颖确认。两者分别保存，不会把迟传的数据冒充24小时数据。"));
+ const message=vcText("div","vcMessage",""),history=vcText("div","vcHistory");shotStep.append(message,history);root.append(shotStep);
+ const controls=vcText("div","vcButtons"),copy=vcText("button","vcButton alt","复制团队共享上传链接");copy.type="button";controls.append(copy);root.append(controls);
+ const say=t=>message.textContent=t;
+ const dataHeaders=()=>({"Content-Type":"application/json"});
+ async function refreshCard(){
+  try{
+   const x=await videoRequest(day.date);const ci=x.checkin;
+   badge.textContent=ci&&ci.published_at_local?"✓ 已登记发布"+((x.uploads||[]).length?" · ✓ 已上传":" · 待上传数据"):"尚未登记发布";
+   badge.className="vcStatus"+((x.uploads||[]).length?" vcGood":"");
+   if(ci&&ci.published_at_local)pubArea.input.value=ci.published_at_local;
+   history.replaceChildren();
+   if(!(x.uploads||[]).length){history.append(vcText("div","vcMini","尚无截图记录。明天上传时会在这里显示真实上传时间。"));return;}
+   for(const u of x.uploads){
+    const box=vcText("div","vcRecord");
+    const local=new Date(u.uploaded_at).toLocaleString("zh-CN",{timeZone:"Australia/Melbourne",hour12:false});
+    const detail=vcText("span","",u.window_label+" · 采集 "+u.screenshot_local.replace("T"," ")+" · 上传 "+local+"（墨尔本） · "+u.editor);
+    const button=vcText("button","","查看截图");button.type="button";const preview=vcText("div","vcPreview");
+    button.addEventListener("click",async()=>{
+     if(preview.childNodes.length){preview.replaceChildren();button.textContent="查看截图";return;}
+     button.disabled=true;button.textContent="加载中…";
+     try{
+      const response=await fetch(videoCheckinApi+"?day="+encodeURIComponent(day.date)+"&image="+encodeURIComponent(u.id),{headers:{"Authorization":"Bearer "+workshopToken},cache:"no-store"});
+      if(!response.ok)throw Error("截图暂时无法读取");
+      const img=document.createElement("img");const url=URL.createObjectURL(await response.blob());img.src=url;img.alt=day.date+"后台截图";img.onload=()=>URL.revokeObjectURL(url);preview.append(img);button.textContent="收起截图";
+     }catch(err){say(err.message);button.textContent="重新查看"}finally{button.disabled=false}
+    });
+    box.append(detail,button,preview);history.append(box);
+   }
+  }catch(err){badge.textContent="云端记录未连接";say("共享数据暂时不可用："+err.message+"。请勿将未保存的数据视为已上传。")}
+ }
+ publish.addEventListener("click",async()=>{
+  const editor=nameArea.input.value.trim(),published=pubArea.input.value;
+  if(!editor||!published){say("请先填写记录人和实际发布时间。");return;}
+  publish.disabled=true;say("正在登记视频发布打卡…");
+  try{
+   writeStorage(NOTES_EDITOR_KEY,editor);
+   const x=await videoRequest(day.date,{method:"POST",headers:dataHeaders(),body:JSON.stringify({action:"publish",day:day.date,editor,published_at_local:published})});
+   say("✓ 发布登记成功。服务器记录时间："+new Date(x.recorded_at).toLocaleString("zh-CN",{timeZone:"Australia/Melbourne"})+"（墨尔本）。明天回来上传这条视频的截图。");
+   await refreshCard();
+  }catch(err){say("未保存："+err.message)}finally{publish.disabled=false}
+ });
+ async function compressScreenshot(file){
+  if(!file||!file.type.startsWith("image/"))throw Error("请选择一张有效的图片截图");
+  if(file.size>15000000)throw Error("原始截图超过15MB，请先缩小");
+  const image=document.createElement("img");const objectUrl=URL.createObjectURL(file);
+  try{
+   await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error("无法读取截图"));image.src=objectUrl});
+   let width=Math.min(image.naturalWidth,1350),quality=.82,data="";
+   for(let attempt=0;attempt<8;attempt++){
+    const height=Math.round(image.naturalHeight*width/image.naturalWidth);
+    const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(width));canvas.height=Math.max(1,height);
+    const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    data=canvas.toDataURL("image/jpeg",quality).split(",")[1];
+    if(data.length<=860000)return data;
+    width=Math.max(550,Math.round(width*.85));quality=Math.max(.52,quality-.055);
+   }
+   throw Error("截图内容过大，建议裁剪成视频号数据区域再上传");
+  }finally{URL.revokeObjectURL(objectUrl)}
+ }
+ upload.addEventListener("click",async()=>{
+  const editor=nameArea.input.value.trim(),captured=timeArea.input.value,file=fileArea.input.files&&fileArea.input.files[0];
+  if(!editor||!captured||!file){say("请填记录人、截图采集时间，并选择后台截图。");return;}
+  upload.disabled=true;say("正在压缩并保存原始截图…");
+  try{
+   writeStorage(NOTES_EDITOR_KEY,editor);
+   const base64=await compressScreenshot(file);
+   const x=await videoRequest(day.date,{method:"POST",headers:dataHeaders(),body:JSON.stringify({action:"screenshot",day:day.date,editor,screenshot_local:captured,window_label:select.value,base64})});
+   await refreshCard();
+   say("✓ 已上传并自动打卡！服务器时间："+new Date(x.uploaded_at).toLocaleString("zh-CN",{timeZone:"Australia/Melbourne"})+"（墨尔本）。截图属于"+day.date+"的视频。");
+   fileArea.input.value="";
+  }catch(err){say("上传未成功："+err.message)}finally{upload.disabled=false}
+ });
+ refresh.addEventListener("click",()=>refreshCard());
+ copy.addEventListener("click",async()=>{
+  const url=location.origin+location.pathname+"#notes="+workshopToken;
+  try{await navigator.clipboard.writeText(url);say("✓ 团队专属链接已复制。仅发给孙颖和项目管理人员；持有该链接的人能查看数据截图。")}catch(err){say("复制失败，请在浏览器使用分享功能。")}
+ });
+ setTimeout(()=>{if(root.isConnected)refreshCard()},20);
+ return root;
+}
 
 /* Interactive workshop agenda and private-by-link D1-backed collaborative notes. */
 const WORKSHOP={"day1":[{"key":"d1-1","time":"0–8分钟","title":"开场：问卷反馈与互动","desc":"大家并不缺健康知识，更想知道如何在澳洲把健康融入生活。现场提问：我们真的享受了澳洲的好生活吗？","prompt":"使用真实问卷反馈开场，确认互动提问和重点"},{"key":"d1-2","time":"8–20分钟","title":"观点一：健康是一套系统","desc":"饮食、睡眠、情绪、精力并非孤立；孙颖的FREEDOM是健康生活方式系统。先展示FREE / DOM总图，留完整结构给第二晚。","prompt":"FREEDOM原版定义、系统图、有哪些真实案例"},{"key":"d1-3","time":"20–33分钟","title":"观点二：从自律到自由","desc":"孙颖150斤到减重后的亲身经历，以及她从严苛控制走向愉悦、可持续健康生活的真实转变。HERS一年实践与发起初心。","prompt":"哪段亲身故事最动人？哪些细节需要孙颖确认？"},{"key":"d1-4","time":"33–45分钟","title":"Food①：从空气与呼吸开始","desc":"介绍空气、水、食物的简单入口；现场练习孙颖版本的555呼吸法。重点是小行动带来的觉察，不夸大生理功效。","prompt":"555呼吸具体步骤、适合现场带练的版本"},{"key":"d1-5","time":"45–53分钟","title":"Food②：水与日常状态","desc":"从自己的饮水习惯、喝水提醒、喜欢的杯子讲起；给出一个当天可实践的饮水小动作。一滴血显微镜故事仅作为个人经历，不作为诊断依据。","prompt":"具体喝水方法、示例与证据要核实什么？"},{"key":"d1-6","time":"53–63分钟","title":"第一轮共创邀请：开放10位","desc":"从「今天几个小方法」连接「2027一年一起活出来」；介绍HERS 2027、A$99首批共创身份、真实权益。开放001–010号，预留报名时间后继续教学。","prompt":"邀请话术、会员权益、付款二维码及支付测试"},{"key":"d1-7","time":"63–77分钟","title":"Food③：餐盘、筷子与当季营养密码","desc":"圆盘＋筷子观察饮食结构；澳洲每日蔬果建议、颜色搭配；以春末食材芦笋等示范本周的一餐。不用把每月全部食谱一次讲完。","prompt":"孙颖选哪三张餐桌/市场照片？当季食材和一个简单食谱"},{"key":"d1-8","time":"77–84分钟","title":"Reset／Emotion／Energy：打开期待","desc":"讲清健康需要长期节奏，点到Reset、情绪、精力、睡眠与运动等内容；把具体实践留给后续全年日历，预告第二晚DOM。","prompt":"Reset的准确方法；Emotion和Energy哪些概念只点到为止？"},{"key":"d1-9","time":"84–90分钟","title":"第二轮邀请：开放5位＋明晚预告","desc":"总结「把健康变成系统，把自律活成自由，把澳洲的好生活真正过出来」；开放011–015号；预告第二晚从一个人走向一群人的绽放。","prompt":"结尾希望孙颖怎样自然收口？第二晚预告最吸引人的钩子"}],"day2":[{"key":"d2-1","time":"0–8分钟","title":"复盘：从一个人的自由，到一群人的自由","desc":"回应第一晚听众分享；重申FREEDOM与从自律到自由。升华：第一晚唤醒一个人，第二晚点燃一群人。","prompt":"第一晚有什么真实反馈或会员故事可以分享？"},{"key":"d2-2","time":"8–24分钟","title":"D：Dining Out｜自由地享受外出就餐","desc":"结合澳洲生活的真实餐厅场景，讲餐前、餐中、餐后如何有弹性地选择食物，而不是为了健康放弃社交。","prompt":"孙颖最想分享哪两个餐厅场景／实用技巧？"},{"key":"d2-3","time":"24–38分钟","title":"O：女性身体与澳洲季节的节奏","desc":"介绍孙颖关注的女性周期、围绝经期、节气和季节习惯；把不同人生阶段的需求放到年度设计里，避免绝对化的减重窗口或医疗承诺。","prompt":"女性周期与季节应如何讲才准确？哪个故事适合？"},{"key":"d2-4","time":"38–52分钟","title":"M：Mastery＋Community｜一群人的力量","desc":"方法只是起点；有日历节奏、有伙伴支持、有真实体验，健康与生活才更容易持续。HERS社群让大家彼此激励、看见、连接。","prompt":"HERS过去一年做过哪些真实活动？孙颖想营造什么样的氛围？"},{"key":"d2-5","time":"52–62分钟","title":"第三轮共创邀请：开放10位","desc":"从「一个人可以活得自由」升华到「一群人可以活得更加精彩」；说明共创身份与明确权益，开放016–025号。","prompt":"这一轮如何讲清楚加入后能真实得到什么？"},{"key":"d2-6","time":"62–78分钟","title":"2027蓝图：12个月，12种自由","desc":"健康是起点，不是终点。全年从选择、健康到AI、财富、创业、审美、情绪、关系、表达与社交。每个月有自由主题、澳洲在地体验、与人同行。此为共创草案。","prompt":"哪些月份孙颖已确定？哪几项需要调整？合作伙伴和活动有哪些？"},{"key":"d2-7","time":"78–83分钟","title":"问答与真实共创","desc":"回应参与方式、共创机会与实际活动；讨论大家最期待的2027主题。","prompt":"孙颖希望现场问大家哪一个问题？"},{"key":"d2-8","time":"83–90分钟","title":"第四轮邀请：开放5位＋正式收尾","desc":"开放026–030号；以「和一群喜欢的人，把2027年活得精彩绽放」收尾，邀姐妹一起开启这一年的探索。","prompt":"收尾话术与最后5位的真实名额如何确认？"}],"months":["01 选择自由","02 健康自由","03 AI自由","04 财富自由","05 创业自由","06 育儿自由","07 审美自由","08 情绪／心灵自由","09 美丽自由","10 亲密关系自由","11 表达自由","12 社交自由"]};
