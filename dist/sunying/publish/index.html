@@ -228,7 +228,7 @@ function buildVideoCheckin(task,day){
  }
  publish.addEventListener("click",async()=>{
   const editor=nameArea.input.value.trim(),published=pubArea.input.value,durationRaw=durationArea.input.value.trim();
-  const match=/^(?:(\\d{1,3}):)?([0-5]?\\d)$/.exec(durationRaw);
+  const match=/^(?:(\d{1,3}):)?([0-5]?\d)$/.exec(durationRaw);
   const durationSeconds=match?(match[1]?Number(match[1])*60+Number(match[2]):Number(match[2])):0;
   if(!editor||!published||!durationSeconds||durationSeconds>7200){say("请填写记录人、实际发布时间及最终成片时长（例如 1:22 或 3:30）。");return;}
   publish.disabled=true;say("正在登记视频发布打卡…");
