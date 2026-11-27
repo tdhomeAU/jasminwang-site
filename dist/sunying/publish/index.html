@@ -122,21 +122,21 @@ if(t.type==="video"){
  const isPast=day.date<localNow;
  article.append(e("p","phaseIntro","按操作顺序找资料 · 点击阶段展开，不再从头翻到底"));
  const pre=stage("01","发布前 · 准备与拍摄","开头标题、完整口播、剪辑片尾",!isPast);
- const during=stage("02","发布时 · 复制并登记","视频号短标题、发布描述、保存发布时间",false);
- const after=stage("03","发布后 · 分享与24小时数据","朋友圈分享、次日截图上传与历史记录",isPast);
+ const during=stage("02","发布时 · 发布视频并转发朋友圈","复制视频号标题与描述 → 发布 → 立即转发朋友圈",false);
+ const after=stage("03","发布后 · 登记与24小时数据","登记实际发布时间 → 次日上传截图并打卡",isPast);
  for(const section of t.sections){
   const label=section.label||"";
   const block=contentSection(section);
   if(label.includes("前3秒")||label.includes("完整口播")||label.includes("编辑说明")||label.includes("提炼依据"))pre.append(block);
   else if(label.includes("视频号短标题")||label.includes("发布描述"))during.append(block);
-  else if(label.includes("朋友圈"))after.append(block);
+  else if(label.includes("朋友圈"))during.append(block);
   else pre.append(block);
  }
  const guide=article.querySelector(".editGuide");
  if(guide)pre.append(guide);
+ const flowTip=e("p","phaseIntro","操作顺序：① 发布视频号 → ② 马上转发朋友圈 → ③ 到下方登记实际发布时间。");
+ during.insertBefore(flowTip,during.firstChild);
  const checkin=buildVideoCheckin(t,day);
- const steps=checkin.querySelectorAll(".vcStep");
- if(steps.length>=2){during.append(steps[0]);}
  after.append(checkin);
  if(t.hint)pre.append(e("p","note","内部制作提醒："+t.hint));
 }else{
@@ -172,16 +172,16 @@ function vcLabel(label,type,value){
 function buildVideoCheckin(task,day){
  const root=vcText("section","videoCheckin");root.dataset.videoDay=day.date;
  const top=vcText("div","vcTop");top.append(vcText("h4","","📈 今天发布，明天上传数据"));const badge=vcText("span","vcStatus","正在读取…");top.append(badge);root.append(top);
- root.append(vcText("p","vcHelp","这条视频当天完成发布后登记实际发布时间；第二天打开同一日期，上传约24小时的后台截图。上传成功会自动打数据卡，并记录真正的上传时刻。"));
+ root.append(vcText("p","vcHelp","视频号发布并转发朋友圈后，登记实际发布时间；次日再回来上传这条视频约24小时的数据截图。系统分别保存截图采集时间和上传时间。"));
  const nameArea=vcLabel("记录人（例如：孙颖）","text",readStorage(NOTES_EDITOR_KEY,""));nameArea.input.maxLength=36;nameArea.input.placeholder="孙颖";
  const pubArea=vcLabel("① 视频实际发布时间 · 墨尔本时间","datetime-local","");
  pubArea.input.min=day.date+"T00:00";pubArea.input.max=day.date+"T23:59";
- const pubStep=vcText("div","vcStep");pubStep.append(vcText("h5","","第一步 · 发布当日"));
+ const pubStep=vcText("div","vcStep");pubStep.append(vcText("h5","","第一步 · 发布并转发朋友圈后登记"));
  const pubInputs=vcText("div","vcInputs");pubInputs.append(nameArea.outer,pubArea.outer);pubStep.append(pubInputs);
  const pubButtons=vcText("div","vcButtons"),publish=vcText("button","vcButton","✓ 已发布 · 保存发布时间");publish.type="button";
  pubButtons.append(publish);pubStep.append(pubButtons);
  const pubNote=vcText("p","vcMini","这是团队共享记录；原来的“完成打勾”仍可照常使用。");pubStep.append(pubNote);root.append(pubStep);
- const shotStep=vcText("div","vcStep");shotStep.append(vcText("h5","","第二步 · 次日约24小时上传截图"));
+ const shotStep=vcText("div","vcStep");shotStep.append(vcText("h5","","第二步 · 第二天上传约24小时数据"));
  const timeArea=vcLabel("后台截图实际采集时间 · 墨尔本时间","datetime-local",melbNowLocal());
  const fileArea=vcLabel("选择视频号后台截图（自动压缩为JPEG）","file");fileArea.input.accept="image/png,image/jpeg,image/webp,image/*";fileArea.input.multiple=false;
  const inputs=vcText("div","vcInputs");inputs.append(timeArea.outer,fileArea.outer);shotStep.append(inputs);
