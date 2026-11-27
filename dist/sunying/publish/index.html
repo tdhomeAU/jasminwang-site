@@ -79,7 +79,8 @@ try{const read=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");if(read&&type
 const datePieces=new Intl.DateTimeFormat("en-GB",{timeZone:"Australia/Melbourne",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
 const dateParts=Object.fromEntries(datePieces.filter(p=>p.type!=="literal").map(p=>[p.type,p.value]));
 const formatToday=dateParts.year+"-"+dateParts.month+"-"+dateParts.day;
-let selected=DATA.days.some(d=>d.date===formatToday&&d.date>="2026-11-23"&&d.date<="2026-11-29")?formatToday:(formatToday>"2026-11-29"?"2026-11-29":"2026-11-23");
+const queryDay=new URLSearchParams(location.search).get("day");
+let selected=(queryDay&&DATA.days.some(d=>d.date===queryDay&&d.date>="2026-11-23"&&d.date<="2026-11-29"))?queryDay:(DATA.days.some(d=>d.date===formatToday&&d.date>="2026-11-23"&&d.date<="2026-11-29")?formatToday:(formatToday>"2026-11-29"?"2026-11-29":"2026-11-23"));
 let pendingOnly=false;
 const ACTIVE_DAYS=DATA.days.filter(d=>d.date>="2026-11-23"&&d.date<="2026-11-29");
 const allTasks=ACTIVE_DAYS.flatMap(day=>day.tasks);
