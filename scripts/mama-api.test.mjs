@@ -23,7 +23,7 @@ test("login fails closed until the shared household password and database are co
 });
 
 test("one shared household password authenticates members with full private access",async()=>{
- const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_MOTHER_PASSWORD:"example-not-a-real-secret",MAMA_QWEN_API_KEY:"test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123"};
+ const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_MOTHER_PASSWORD:"example-not-a-real-secret",MAMA_QWEN_API_KEY:"test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123",CF_PAGES_BRANCH:"feature-mama-voice-care-v1"};
  const login=await invoke("auth","POST",{password:"example-not-a-real-secret",consent:true},env);
  assert.equal(login.status,200);
  assert.deepEqual(await login.json(),{ok:true,role:"member"});
@@ -74,7 +74,7 @@ test("only a family member can save confirmed companion memory",async()=>{
 });
 
 test("family chat archive stores only recognized text and supports deletion",async()=>{
- const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_MOTHER_PASSWORD:"example-not-a-real-secret",MAMA_QWEN_API_KEY:"test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123"};
+ const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_MOTHER_PASSWORD:"example-not-a-real-secret",MAMA_QWEN_API_KEY:"test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123",CF_PAGES_BRANCH:"feature-mama-voice-care-v1"};
  const login=await invoke("auth","POST",{password:"example-not-a-real-secret"},env);
  const cookie=login.headers.get("Set-Cookie").split(";")[0];
  const saved=await invoke("archive","POST",{text:"虚构测试：我喜欢在阳台养花"},env,cookie);
@@ -86,6 +86,14 @@ test("family chat archive stores only recognized text and supports deletion",asy
  assert.equal(deleted.status,200);
  const tooLong=await invoke("archive","POST",{text:"字".repeat(2001)},env,cookie);
  assert.equal(tooLong.status,422);
+});
+
+test("request-time archive schema setup is blocked outside the Preview branch",async()=>{
+ const env={MAMA_DB:testDb,MAMA_SESSION_SECRET:"test-session-secret-01234567890123456789",MAMA_MOTHER_PASSWORD:"example-not-a-real-secret",MAMA_QWEN_API_KEY:"test-key",MAMA_QWEN_WORKSPACE_ID:"ws-test123",CF_PAGES_BRANCH:"main"};
+ const login=await invoke("auth","POST",{password:"example-not-a-real-secret"},env);
+ const cookie=login.headers.get("Set-Cookie").split(";")[0];
+ const response=await invoke("archive","GET",undefined,env,cookie);
+ assert.equal(response.status,503);
 });
 
 test("records cannot be accessed without authenticated signed cookie",async()=>{

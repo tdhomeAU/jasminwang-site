@@ -114,9 +114,20 @@ async function recordRecords({request,env},method,role){
   return json({ok:true,record:{id,kind:body.kind,content:payload,created_at:now}},201);
  }catch{return json({error:"保存失败，请重试"},503);}
 }
+const archiveSchemaBindings=new WeakSet();
+async function ensureChatArchiveSchema(env){
+ // Apply this small additive schema only to the explicitly authorized Preview branch.
+ // Production deployments must use reviewed migrations, never request-time DDL.
+ if(env.CF_PAGES_BRANCH&&env.CF_PAGES_BRANCH!=="feature-mama-voice-care-v1")throw new Error("archive schema is Preview-only");
+ if(archiveSchemaBindings.has(env.MAMA_DB))return;
+ await env.MAMA_DB.prepare("CREATE TABLE IF NOT EXISTS mama_chat_archive (id TEXT PRIMARY KEY, content TEXT NOT NULL CHECK (length(content) BETWEEN 1 AND 2000), source TEXT NOT NULL CHECK (source = 'mama_voice_transcript'), created_at TEXT NOT NULL)").run();
+ await env.MAMA_DB.prepare("CREATE INDEX IF NOT EXISTS idx_mama_chat_archive_created ON mama_chat_archive(created_at DESC)").run();
+ archiveSchemaBindings.add(env.MAMA_DB);
+}
 async function recordChatArchive({request,env},method,role){
  if(!env.MAMA_DB)return json({error:"聊天资料库尚未配置"},503);
  if(role!=="member")return json({error:"聊天归档需要家庭口令验证",archive:false},403);
+ try{await ensureChatArchiveSchema(env);}catch{return json({error:"聊天资料库尚未就绪，请稍后重试"},503);}
  if(method==="GET"){
   try{
    const rows=await env.MAMA_DB.prepare("SELECT id,content,created_at FROM mama_chat_archive ORDER BY created_at DESC LIMIT 100").all();

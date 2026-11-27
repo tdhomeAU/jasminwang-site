@@ -1,6 +1,6 @@
 # 妈妈的 AI 语音健康小伙伴 — V1 私人测试版
 
-> **状态（2026-11-27）：** Preview 已配置 D1、百炼 API Key、Workspace ID、家庭记录口令和会话签名 Secret；手机曾实测可听到 AI 回复，桌面端仍有播放问题。接话静音阈值为 1600ms，每日成功连接阈值为 30 次（不是费用上限）。本次分支加入家庭成员语音文字自动归档，需应用迁移 0004 后才可运行。医院文件/Google Drive 尚未接入。跨境/数据位置和知情同意核查未完成，仅用虚构资料。仅开发分支，不会合并到正式网站。
+> **状态（2026-11-27）：** Preview 已配置 D1、百炼 API Key、Workspace ID、家庭记录口令和会话签名 Secret；手机曾实测可听到 AI 回复，桌面端仍有播放问题。接话静音阈值为 1600ms，每日成功连接阈值为 30 次（不是费用上限）。本次分支加入家庭成员语音文字自动归档；首次由家庭成员打开资料库时，API 会仅在该 Preview 分支创建所需 D1 表。医院文件/Google Drive 尚未接入。跨境/数据位置和知情同意核查未完成，仅用虚构资料。仅开发分支，不会合并到正式网站。
 > 仅供家庭使用。**不要在安装、储存位置、隐私授权和安全检查完成前录入真实医疗资料。**
 
 ## 范围
@@ -20,7 +20,7 @@
 1. 已创建**与注册系统完全分开的**测试 D1 数据库 `mama-private-test`（Asia Pacific 区域提示；不代表中国内地数据驻留）。
 2. 新建前审核数据库的所在地、跨境访问和敏感个人信息处理条件。Cloudflare D1 的位置提示不等于中国内地数据驻留保证；如有本地存储/监管要求，改用中国内地合适数据库和后端部署，**不要继续在 D1 存放真实资料**。
 3. Cloudflare Pages 项目 `jasminwang-site` 的 Preview 环境已绑定 `MAMA_DB` -> `mama-private-test`。既有 `FREEDOM_DB` 未改动。
-4. 已在新数据库执行 `migrations/0002_mama_private.sql`，并在 D1 Studio 只读核验到 `mama_health_records`、`mama_login_failures`、`mama_voice_sessions` 三张表；目前没有真实或虚构健康记录。`migrations/0003_mama_companion_memory.sql` 已应用于 **Preview 专用** `mama-private-test`。新建 `0004_mama_chat_archive.sql` 后，需明确应用到同一个 Preview 测试库；不要应用到生产数据库。
+4. 已在新数据库执行 `migrations/0002_mama_private.sql`，并在 D1 Studio 只读核验到 `mama_health_records`、`mama_login_failures`、`mama_voice_sessions` 三张表；目前没有真实或虚构健康记录。`migrations/0003_mama_companion_memory.sql` 已应用于 **Preview 专用** `mama-private-test`。`0004_mama_chat_archive.sql` 已加入仓库；该表首次由已登录家庭成员使用资料库时会在 Preview 受保护地初始化，生产分支的 API 不会执行请求时 DDL。
 
 ## 二、配置服务端 Secrets（不能提交至 GitHub）
 
