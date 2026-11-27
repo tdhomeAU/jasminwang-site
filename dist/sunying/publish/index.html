@@ -157,7 +157,9 @@ function buildVideoCheckin(task,day){
    for(const u of x.uploads){
     const box=vcText("div","vcRecord");
     const local=new Date(u.uploaded_at).toLocaleString("zh-CN",{timeZone:"Australia/Melbourne",hour12:false});
-    const detail=vcText("span","",u.window_label+" · 采集 "+u.screenshot_local.replace("T"," ")+" · 上传 "+local+"（墨尔本） · "+u.editor);
+    const diff=(ci&&ci.published_at_local)?(Date.parse(u.screenshot_local)-Date.parse(ci.published_at_local))/3600000:null;
+    const elapsed=Number.isFinite(diff)?(" · 距发布约"+diff.toFixed(1)+"小时"+(u.window_label==="24h"&&Math.abs(diff-24)>4?"（不在24±4小时窗口）":"")):"";
+    const detail=vcText("span","",u.window_label+" · 采集 "+u.screenshot_local.replace("T"," ")+elapsed+" · 上传 "+local+"（墨尔本） · "+u.editor);
     const button=vcText("button","","查看截图");button.type="button";const preview=vcText("div","vcPreview");
     button.addEventListener("click",async()=>{
      if(preview.childNodes.length){preview.replaceChildren();button.textContent="查看截图";return;}
@@ -208,6 +210,8 @@ function buildVideoCheckin(task,day){
   try{
    writeStorage(NOTES_EDITOR_KEY,editor);
    const base64=await compressScreenshot(file);
+   const hr=pubArea.input.value?(Date.parse(captured)-Date.parse(pubArea.input.value))/3600000:null;
+   if(select.value==="24h"&&Number.isFinite(hr)&&Math.abs(hr-24)>4){const yes=confirm("这张截图距发布约"+hr.toFixed(1)+"小时，不在建议的24±4小时范围。仍要按原始时间存档吗？");if(!yes){say("已取消，请调整观察窗口或确认截图采集时间。");return;}}
    const x=await videoRequest(day.date,{method:"POST",headers:dataHeaders(),body:JSON.stringify({action:"screenshot",day:day.date,editor,screenshot_local:captured,window_label:select.value,base64})});
    await refreshCard();
    say("✓ 已上传并自动打卡！服务器时间："+new Date(x.uploaded_at).toLocaleString("zh-CN",{timeZone:"Australia/Melbourne"})+"（墨尔本）。截图属于"+day.date+"的视频。");
